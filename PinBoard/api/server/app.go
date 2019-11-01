@@ -52,7 +52,6 @@ func (a *App) setRouters() {
 	a.Router.HandleFunc("/pins/{id}", getPin).Methods("GET")
 	a.Router.HandleFunc("/pins", createPin).Methods("POST")
 	a.Router.HandleFunc("/pins/{id}", deletePin).Methods("DELETE")
-	a.Router.Queries()
 }
 func (a *App) Run(addr string) {
 	err := http.ListenAndServe(addr, a.Router)
