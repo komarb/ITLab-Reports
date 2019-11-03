@@ -16,7 +16,6 @@ type App struct {
 	Router *mux.Router
 	DB *mongo.Client
 }
-
 var collection *mongo.Collection
 
 func (a *App) Init(config *config.Config) {
