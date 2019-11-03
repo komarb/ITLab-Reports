@@ -63,6 +63,7 @@ func createPin(w http.ResponseWriter, r *http.Request) {
 	var pin models.Pin
 	w.Header().Set("Content-Type", "application/json")
 	json.NewDecoder(r.Body).Decode(&pin)
+	pin.PinSender = r.Header.Get("CustomAuthor")
 	pin.Date = r.Header.Get("Date")
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -75,6 +76,35 @@ func createPin(w http.ResponseWriter, r *http.Request) {
 
 
 	json.NewEncoder(w).Encode(pin)
+}
+func updatePin(w http.ResponseWriter, r *http.Request) {
+	var pin models.Pin
+	var updatedPin models.Pin
+	w.Header().Set("Content-Type", "application/json")
+	json.NewDecoder(r.Body).Decode(&pin)
+	data := mux.Vars(r)
+
+	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	filter := bson.M{"_id": objID}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	err = collection.FindOne(ctx, filter).Decode(&updatedPin)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	updatedPin.Text = pin.Text
+	updateResult, err := collection.ReplaceOne(ctx, filter, updatedPin)
+	if err != nil || updateResult.MatchedCount == 0 {
+		http.NotFound(w, r)
+		return
+	}
+	json.NewEncoder(w).Encode(updatedPin)
 }
 func deletePin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
