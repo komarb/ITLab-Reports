@@ -19,7 +19,7 @@ type DBConfig struct {
 
 func GetConfig() *Config {
 	var config Config
-	data, err := ioutil.ReadFile("api/config.json")
+	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.Panic(err)
 	}

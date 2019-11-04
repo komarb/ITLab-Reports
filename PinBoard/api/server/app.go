@@ -39,6 +39,7 @@ func (a *App) Init(config *config.Config) {
 		log.Panic(err)
 	}
 	fmt.Println("Connected to MongoDB!")
+	fmt.Println("DB name: " + config.DB.DBName+", collection: " + config.DB.CollectionName)
 
 	collection = client.Database(config.DB.DBName).Collection(config.DB.CollectionName)
 
