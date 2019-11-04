@@ -1,5 +1,5 @@
 {
-  "host": "localhost",
+  "host": "pin_mongo",
   "port": "27017",
   "dbname" : "pinBoard",
   "collectionName" : "pins"

@@ -16,7 +16,6 @@ type App struct {
 	Router *mux.Router
 	DB *mongo.Client
 }
-
 var collection *mongo.Collection
 
 func (a *App) Init(config *config.Config) {
@@ -40,6 +39,7 @@ func (a *App) Init(config *config.Config) {
 		log.Panic(err)
 	}
 	fmt.Println("Connected to MongoDB!")
+	fmt.Println("DB name: " + config.DB.DBName+", collection: " + config.DB.CollectionName)
 
 	collection = client.Database(config.DB.DBName).Collection(config.DB.CollectionName)
 
@@ -51,8 +51,8 @@ func (a *App) setRouters() {
 	a.Router.HandleFunc("/pins", getAllPins).Methods("GET")
 	a.Router.HandleFunc("/pins/{id}", getPin).Methods("GET")
 	a.Router.HandleFunc("/pins", createPin).Methods("POST")
+	a.Router.HandleFunc("/pins/{id}", updatePin).Methods("PUT")
 	a.Router.HandleFunc("/pins/{id}", deletePin).Methods("DELETE")
-	a.Router.Queries()
 }
 func (a *App) Run(addr string) {
 	err := http.ListenAndServe(addr, a.Router)

@@ -3,6 +3,7 @@ package main
 import (
 	"./config"
 	"./server"
+	"fmt"
 )
 
 func main() {
@@ -10,4 +11,5 @@ func main() {
 	app := &server.App{}
 	app.Init(config)
 	app.Run(":8080")
+	fmt.Scanln()
 }
