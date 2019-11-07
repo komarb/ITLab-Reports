@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   pin_api:
-    container_name: 'pin_api'
+    container_name: 'reports_api'
     build: './api'
     ports:
       - '8080:8080'
@@ -9,6 +9,6 @@ services:
       - 'pin_mongo'
   pin_mongo:
     image: 'mongo:latest'
-    container_name: 'pin_mongo'
+    container_name: 'reports_mongo'
     ports:
       - '27100:27017'

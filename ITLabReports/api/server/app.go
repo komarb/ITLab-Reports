@@ -47,12 +47,12 @@ func (a *App) Init(config *config.Config) {
 	a.setRouters()
 }
 func (a *App) setRouters() {
-	a.Router.HandleFunc("/pins", getAllPinsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/pins", getAllPins).Methods("GET")
-	a.Router.HandleFunc("/pins/{id}", getPin).Methods("GET")
-	a.Router.HandleFunc("/pins", createPin).Methods("POST")
-	a.Router.HandleFunc("/pins/{id}", updatePin).Methods("PUT")
-	a.Router.HandleFunc("/pins/{id}", deletePin).Methods("DELETE")
+	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
+	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
+	a.Router.HandleFunc("/reports", createReport).Methods("POST")
+	a.Router.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
+	a.Router.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
 }
 func (a *App) Run(addr string) {
 	err := http.ListenAndServe(addr, a.Router)

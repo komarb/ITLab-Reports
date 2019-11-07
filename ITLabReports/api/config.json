@@ -1,0 +1,6 @@
+{
+  "host": "reports_mongo",
+  "port": "27017",
+  "dbname" : "ITLabReports",
+  "collectionName" : "reports"
+}

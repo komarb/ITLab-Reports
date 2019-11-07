@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-func getAllPins(w http.ResponseWriter, r *http.Request) {
-	pins := make([]models.Pin, 0)
+func getAllReports(w http.ResponseWriter, r *http.Request) {
+	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, bson.D{})
@@ -25,14 +25,14 @@ func getAllPins(w http.ResponseWriter, r *http.Request) {
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cur.Close(ctx)
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-	err = cur.All(ctx, &pins)
+	err = cur.All(ctx, &reports)
 	if err != nil {
 		log.Fatal(err)
 	}
-	json.NewEncoder(w).Encode(pins)
+	json.NewEncoder(w).Encode(reports)
 }
-func getAllPinsSorted(w http.ResponseWriter, r *http.Request) {
-	pins := make([]models.Pin, 0)
+func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
+	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, bson.D{})
@@ -42,7 +42,7 @@ func getAllPinsSorted(w http.ResponseWriter, r *http.Request) {
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cur.Close(ctx)
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-	err = cur.All(ctx, &pins)
+	err = cur.All(ctx, &reports)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,38 +50,38 @@ func getAllPinsSorted(w http.ResponseWriter, r *http.Request) {
 	sortVar := data["var"]
 	switch sortVar {
 	case "name":
-		sort.Slice(pins, func(i, j int) bool { return pins[i].PinSender < pins[j].PinSender })
+		sort.Slice(reports, func(i, j int) bool { return reports[i].ReportSender < reports[j].ReportSender })
 	case "date":
-		sort.Slice(pins, func(i, j int) bool { return utils.FormatDate(pins[i].Date) < utils.FormatDate(pins[j].Date) })
+		sort.Slice(reports, func(i, j int) bool { return utils.FormatDate(reports[i].Date) < utils.FormatDate(reports[j].Date) })
 	}
-	json.NewEncoder(w).Encode(pins)
+	json.NewEncoder(w).Encode(reports)
 }
-func getPin(w http.ResponseWriter, r *http.Request) {
+func getReport(w http.ResponseWriter, r *http.Request) {
 
 }
-func createPin(w http.ResponseWriter, r *http.Request) {
-	var pin models.Pin
+func createReport(w http.ResponseWriter, r *http.Request) {
+	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
-	json.NewDecoder(r.Body).Decode(&pin)
-	pin.PinSender = r.Header.Get("CustomAuthor")
-	pin.Date = r.Header.Get("Date")
+	json.NewDecoder(r.Body).Decode(&report)
+	report.ReportSender = r.Header.Get("CustomAuthor")
+	report.Date = r.Header.Get("Date")
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	result, err := collection.InsertOne(ctx, pin)
+	result, err := collection.InsertOne(ctx, report)
 	if err != nil {
 		log.Panic(err)
 	}
 	id := result.InsertedID
-	pin.ID, err = primitive.ObjectIDFromHex(id.(primitive.ObjectID).Hex())
+	report.ID, err = primitive.ObjectIDFromHex(id.(primitive.ObjectID).Hex())
 
 
-	json.NewEncoder(w).Encode(pin)
+	json.NewEncoder(w).Encode(report)
 }
-func updatePin(w http.ResponseWriter, r *http.Request) {
-	var pin models.Pin
-	var updatedPin models.Pin
+func updateReport(w http.ResponseWriter, r *http.Request) {
+	var report models.Report
+	var updatedReport models.Report
 	w.Header().Set("Content-Type", "application/json")
-	json.NewDecoder(r.Body).Decode(&pin)
+	json.NewDecoder(r.Body).Decode(&report)
 	data := mux.Vars(r)
 
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
@@ -93,20 +93,20 @@ func updatePin(w http.ResponseWriter, r *http.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-	err = collection.FindOne(ctx, filter).Decode(&updatedPin)
+	err = collection.FindOne(ctx, filter).Decode(&updatedReport)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	updatedPin.Text = pin.Text
-	updateResult, err := collection.ReplaceOne(ctx, filter, updatedPin)
+	updatedReport.Text = report.Text
+	updateResult, err := collection.ReplaceOne(ctx, filter, updatedReport)
 	if err != nil || updateResult.MatchedCount == 0 {
 		http.NotFound(w, r)
 		return
 	}
-	json.NewEncoder(w).Encode(updatedPin)
+	json.NewEncoder(w).Encode(updatedReport)
 }
-func deletePin(w http.ResponseWriter, r *http.Request) {
+func deleteReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	data := mux.Vars(r)
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))

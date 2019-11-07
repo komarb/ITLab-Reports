@@ -1,4 +1,4 @@
-# Pin Board API
+# ITLab Reports API
 Created with Golang, Gorilla and MongoDB
 
 ## Installation using Docker
