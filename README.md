@@ -3,7 +3,7 @@ Service for storing work reports
 
 Status | master | develop
 ---|---|---
-[![Actions Status](https://github.com/itlabrtumirea/itlab-reports/workflows/build/badge.svg?branch=master)](https://github.com/itlabrtumirea/itlab-reports/actions) | [![Actions Status](https://github.com/itlabrtumirea/itlab-reports/workflows/build/badge.svg?branch=develop)](https://github.com/itlabrtumirea/itlab-reports/actions)
+. | [![Actions Status](https://github.com/itlabrtumirea/itlab-reports/workflows/build/badge.svg?branch=master)](https://github.com/itlabrtumirea/itlab-reports/actions) | [![Actions Status](https://github.com/itlabrtumirea/itlab-reports/workflows/build/badge.svg?branch=develop)](https://github.com/itlabrtumirea/itlab-reports/actions)
 
 
 ## Configuration
