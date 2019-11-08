@@ -75,10 +75,15 @@ stages:
         inputs:
           script: 'docker-compose --no-ansi logs test-api'
           workingDirectory: './tests/e2e/'
-      
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'tests/e2e/out'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          CleanTargetFolder: true
       - task: PublishTestResults@2
         inputs:
           testResultsFormat: 'JUnit'
           testResultsFiles: 'testmace*.xml'
-          searchFolder: 'tests/e2e/out'
+          searchFolder: '$(Build.ArtifactStagingDirectory)'
           failTaskOnFailedTests: true
