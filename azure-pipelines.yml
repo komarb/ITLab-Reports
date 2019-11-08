@@ -1,0 +1,50 @@
+name: $(BuildID)-$(Build.SourceBranchName)
+
+trigger:
+- master
+- develop
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+  CGO_ENABLED: 0
+  GOOS: linux
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+
+    - task: Go@0
+      displayName: get github.com/gorilla/mux
+      inputs:
+        command: 'get'
+        arguments: 'github.com/gorilla/mux'
+    - task: Go@0
+      displayName: get go.mongodb.org/mongo-driver/bson
+      inputs:
+        command: 'get'
+        arguments: 'go.mongodb.org/mongo-driver/bson'
+    - task: Go@0
+      displayName: get go.mongodb.org/mongo-driver/mongo
+      inputs:
+        command: 'get'
+        arguments: 'go.mongodb.org/mongo-driver/mongo'
+
+    - task: Go@0
+      inputs:
+        command: 'build'
+        arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v ./src/ITLabReports/api'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'itlab-reports-build'
+        publishLocation: 'Container'
