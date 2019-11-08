@@ -1,0 +1,14 @@
+children:
+  - Get reports
+  - Create report
+  - Get reports (one)
+  - Get one report
+variables: {}
+type: Folder
+authData:
+  type: inherit
+requestData:
+  headers: []
+  disabledInheritedHeaders: []
+  strictSSL: Inherit
+name: Simple tests

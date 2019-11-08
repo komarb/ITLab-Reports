@@ -1,5 +1,5 @@
 {
-  "host": "reports_mongo",
+  "host": "test-db",
   "port": "27017",
   "dbname" : "tests_database",
   "collectionName" : "reports"

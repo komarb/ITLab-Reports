@@ -1,0 +1,25 @@
+children:
+  - Assertions
+variables:
+  checkCount: '0'
+type: RequestStep
+assignVariables: []
+requestData:
+  request:
+    method: GET
+    url: '${$env.basePath}/reports'
+  headers: []
+  disabledInheritedHeaders: []
+  params: []
+  body:
+    type: Json
+    jsonBody: ''
+    xmlBody: ''
+    textBody: ''
+    formData: []
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+authData:
+  type: inherit
+name: Get reports
