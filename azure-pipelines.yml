@@ -69,9 +69,10 @@ stages:
         inputs:
           script: 'docker-compose --no-ansi logs test-api'
           workingDirectory: './tests/e2e/'
+      
       - task: PublishTestResults@2
         inputs:
           testResultsFormat: 'JUnit'
-          testResultsFiles: '*.xml'
+          testResultsFiles: '*testmace.xml'
           searchFolder: 'tests/e2e/out'
           failTaskOnFailedTests: true
