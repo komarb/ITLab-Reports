@@ -23,7 +23,7 @@ jobs:
         go get go.mongodb.org/mongo-driver/mongo
 
     - name: Build
-      run: go build -v -o main ./ITLabReports/api
+      run: CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main -v ./ITLabReports/api
     - name: Uplload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
