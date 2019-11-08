@@ -41,4 +41,10 @@ stages:
     - task: Go@0
       inputs:
         command: 'build'
-        arguments: '-a -installsuffix cgo -o main -v ./src/ITLabReports/api'
+        arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v ./src/ITLabReports/api'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'itlab-reports-build'
+        publishLocation: 'Container'
