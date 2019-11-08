@@ -1,0 +1,23 @@
+children: []
+variables: {}
+type: Assertion
+assertions:
+  - disabled: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValue: '200'
+  - disabled: false
+    type: script
+    script: |
+      assert.typeOf(tm.currentNode.parent.response.body, "object")
+    name: Body must be an object
+  - disabled: false
+    type: script
+    script: >-
+      const requestNode = tm.currentNode.parent;
+
+      assert.equal(requestNode.response.body[0].id,
+      requestNode.parent.dynamicVars.reportId)
+    name: 'If of returned object must be ${$dynamicVar.reportId}'
+name: Assertions
