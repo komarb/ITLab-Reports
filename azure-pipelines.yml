@@ -39,6 +39,7 @@ stages:
         arguments: 'go.mongodb.org/mongo-driver/mongo'
 
     - task: Go@0
+      displayName: build
       inputs:
         command: 'build'
         arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v ./src/ITLabReports/api'
@@ -48,6 +49,11 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'itlab-reports-build'
         publishLocation: 'Container'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: 'api-build'
+        publishLocation: 'pipeline'
 
 - stage: Test
   displayName: Test reports service
@@ -73,6 +79,6 @@ stages:
       - task: PublishTestResults@2
         inputs:
           testResultsFormat: 'JUnit'
-          testResultsFiles: '*testmace.xml'
+          testResultsFiles: 'testmace*.xml'
           searchFolder: 'tests/e2e/out'
           failTaskOnFailedTests: true
