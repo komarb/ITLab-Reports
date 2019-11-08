@@ -48,3 +48,30 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'itlab-reports-build'
         publishLocation: 'Container'
+
+- stage: Test
+  displayName: Test reports service
+  jobs:
+  - job: Test
+    displayName: Test
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      - task: CmdLine@2
+        displayName: run testmace
+        inputs:
+          script: 'docker-compose --no-ansi up testmace'
+          workingDirectory: './tests/e2e/'
+      - task: CmdLine@2
+        displayName: show logs
+        inputs:
+          script: 'docker-compose --no-ansi logs test-api'
+          workingDirectory: './tests/e2e/'
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '*.xml'
+          searchFolder: 'tests/e2e/out'
+          failTaskOnFailedTests: true
