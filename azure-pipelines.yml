@@ -43,16 +43,10 @@ stages:
       inputs:
         command: 'build'
         arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v ./src/ITLabReports/api'
-
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'itlab-reports-build'
-        publishLocation: 'Container'
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)'
-        artifact: 'api-build'
+        artifact: 'itlab-reports-api-build'
         publishLocation: 'pipeline'
 
 - stage: Test
@@ -65,11 +59,11 @@ stages:
       vmImage: 'ubuntu-latest'
 
     steps:
-    - task: DeleteFiles@1
+    - task: DownloadPipelineArtifact@2
       inputs:
-        SourceFolder: 'tests/e2e/out'
-        Contents: '**'
-        RemoveSourceFolder: true
+        artifactName: 'itlab-reports-api-build'
+        buildType: 'current'
+        targetPath: 'tests/e2e/'
     - task: CmdLine@2
       displayName: run testmace
       inputs:
