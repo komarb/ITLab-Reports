@@ -1,2 +1,3 @@
 PinBoard/.idea
 tests/e2e/out
+tests/e2e/api/api-build/
