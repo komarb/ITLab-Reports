@@ -63,7 +63,7 @@ stages:
       inputs:
         artifactName: 'itlab-reports-api-build'
         buildType: 'current'
-        targetPath: 'tests/e2e/itlab-reports-api-build'
+        targetPath: './tests/e2e/itlab-reports-api-build'
     - task: CmdLine@2
       displayName: run testmace
       inputs:
