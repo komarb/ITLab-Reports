@@ -57,7 +57,26 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 func getReport(w http.ResponseWriter, r *http.Request) {
+	var report models.Report
+	w.Header().Set("Content-Type", "application/json")
+	json.NewDecoder(r.Body).Decode(&report)
+	data := mux.Vars(r)
 
+	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	filter := bson.M{"_id": objID}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	err = collection.FindOne(ctx, filter).Decode(&report)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	json.NewEncoder(w).Encode(report)
 }
 func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
