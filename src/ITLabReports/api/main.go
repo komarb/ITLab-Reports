@@ -1,3 +1,4 @@
+//TODO: To make prod ver - change ReadFile directory of config file to "congif.json" and db host from mongo docker hostS to "localhost"
 package main
 
 import (
