@@ -48,6 +48,7 @@ func (a *App) Init(config *config.Config) {
 }
 func (a *App) setRouters() {
 	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
 	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
 	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
 	a.Router.HandleFunc("/reports", createReport).Methods("POST")
