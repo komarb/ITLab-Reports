@@ -1,12 +1,12 @@
 version: '3.7'
 services:
-  reports_api:
+  api:
     build: './api'
     ports:
       - '8080:8080'
     depends_on:
-      - 'pin_mongo'
-  reports_mongo:
+      - 'db'
+  db:
     image: 'mongo:latest'
     ports:
       - '27100:27017'

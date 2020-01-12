@@ -8,9 +8,9 @@ import (
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
-	"sort"
 	"time"
 )
 
@@ -35,7 +35,17 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	cur, err := collection.Find(ctx, bson.D{})
+	data := mux.Vars(r)
+	sortVar := data["var"]
+	findOptions := options.Find()
+	switch sortVar {
+	case "name":
+		findOptions.SetSort(bson.M{"reportsender": 1})
+	case "date":
+		findOptions.SetSort(bson.M{"date": 1})
+	}
+
+	cur, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -46,25 +56,72 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	data := mux.Vars(r)
-	sortVar := data["var"]
-	switch sortVar {
-	case "name":
-		sort.Slice(reports, func(i, j int) bool { return reports[i].ReportSender < reports[j].ReportSender })
-	case "date":
-		sort.Slice(reports, func(i, j int) bool { return utils.FormatDate(reports[i].Date) < utils.FormatDate(reports[j].Date) })
-	}
 	json.NewEncoder(w).Encode(reports)
 }
 func getReport(w http.ResponseWriter, r *http.Request) {
+	var report models.Report
+	w.Header().Set("Content-Type", "application/json")
+	json.NewDecoder(r.Body).Decode(&report)
+	data := mux.Vars(r)
 
+	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	filter := bson.M{"_id": objID}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	err = collection.FindOne(ctx, filter).Decode(&report)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	json.NewEncoder(w).Encode(report)
+}
+func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
+	//query string: db.reports.find({"reportsender":"Anton", "$and" : [{"date" : {"$gte":"2019-12-31"}}, {"date" : {"$lte" : "2020-01-06"}} ]})
+	reports := make([]models.Report, 0)
+	w.Header().Set("Content-Type", "application/json")
+
+	data := mux.Vars(r)
+	employee := data["employee"]
+	dateBegin := utils.FormatQueryDate(data["dateBegin"])+"T00:00:00"
+	dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
+	log.Println(dateBegin)
+	log.Println(dateEnd)
+	findOptions := options.Find().SetSort(bson.M{"date": 1})
+	filter := bson.D{
+		{"reportsender" ,employee},
+		{"$and", []interface{}{
+			bson.D{{"date",bson.M{"$gte": dateBegin}}},
+			bson.D{{"date", bson.M{"$lte" : dateEnd}}},
+		}},
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	cur, err := collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		log.Panic(err)
+	}
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	defer cur.Close(ctx)
+
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	err = cur.All(ctx, &reports)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(len(reports))
+	json.NewEncoder(w).Encode(reports)
 }
 func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
 	json.NewDecoder(r.Body).Decode(&report)
 	report.ReportSender = r.Header.Get("CustomAuthor")
-	report.Date = r.Header.Get("Date")
+	headerDate := r.Header.Get("Date")
+	report.Date = utils.FormatDate(headerDate)
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, err := collection.InsertOne(ctx, report)

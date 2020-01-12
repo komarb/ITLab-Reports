@@ -39,12 +39,50 @@ stages:
         arguments: 'go.mongodb.org/mongo-driver/mongo'
 
     - task: Go@0
+      displayName: build
       inputs:
         command: 'build'
         arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v ./src/ITLabReports/api'
-
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'itlab-reports-build'
-        publishLocation: 'Container'
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: 'itlab-reports-api-build'
+        publishLocation: 'pipeline'
+
+- stage: Test
+  displayName: Test reports service
+  jobs:
+  - job: Test
+    displayName: Test
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: 'itlab-reports-api-build'
+        buildType: 'current'
+        targetPath: './tests/e2e/api/itlab-reports-api-build'
+    - task: CmdLine@2
+      displayName: run testmace
+      inputs:
+        script: 'docker-compose --no-ansi up testmace'
+        workingDirectory: './tests/e2e/'
+    - task: CmdLine@2
+      displayName: show logs
+      inputs:
+        script: 'docker-compose --no-ansi logs test-api'
+        workingDirectory: './tests/e2e/'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'tests/e2e/out'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        CleanTargetFolder: true
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'testmace*.xml'
+        searchFolder: '$(Build.ArtifactStagingDirectory)'
+        failTaskOnFailedTests: true

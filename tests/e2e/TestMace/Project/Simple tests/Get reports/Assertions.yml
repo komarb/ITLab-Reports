@@ -1,0 +1,24 @@
+children: []
+variables: {}
+type: Assertion
+assertions:
+  - disabled: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValue: '200'
+  - disabled: false
+    type: script
+    script: >
+      console.log(tm.currentNode.parent.vars.checkCount)
+
+      assert(Array.isArray(tm.currentNode.parent.response.body), 'Body must be
+      an array')
+    name: Body must be an array
+  - disabled: false
+    type: compare
+    actualValue: '${$response.body.length}'
+    operator: equal
+    expectedValue: '${checkCount}'
+    name: 'Body mast contains ${checkCount} elements'
+name: Assertions

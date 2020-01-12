@@ -1,0 +1,33 @@
+children:
+  - Assertions
+variables: {}
+type: RequestStep
+assignVariables: []
+requestData:
+  request:
+    method: POST
+    url: '${$env.basePath}/reports'
+  headers:
+    - isChecked: true
+      name: Date
+      value: 'Sun, 12 Jan 2020 02:49:00'
+    - isChecked: true
+      name: CustomAuthor
+      value: Boris
+  disabledInheritedHeaders: []
+  params: []
+  body:
+    type: Json
+    jsonBody: |-
+      {
+        text:"made thing 1"
+      }
+    xmlBody: ''
+    textBody: ''
+    formData: []
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+authData:
+  type: inherit
+name: Create report 2

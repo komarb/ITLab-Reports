@@ -1,0 +1,16 @@
+version: "3.7"
+
+services:
+  test-api:
+    build: ./api
+    depends_on:
+    - test-db
+  test-db:
+    image: mongo:latest
+
+  testmace:
+    build: ./TestMace
+    volumes:
+      - ./out:/out
+    depends_on:
+    - test-api

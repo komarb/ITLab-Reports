@@ -3,8 +3,8 @@ Service for storing work reports
 
 Status | master | develop
 ---|---|---
-. | [![Actions Status](https://github.com/itlabrtumirea/itlab-reports/workflows/build/badge.svg?branch=master)](https://github.com/itlabrtumirea/itlab-reports/actions) | [![Actions Status](https://github.com/itlabrtumirea/itlab-reports/workflows/build/badge.svg?branch=develop)](https://github.com/itlabrtumirea/itlab-reports/actions)
-
+build | [![Build Status](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_apis/build/status/ITLab-Reports?branchName=master)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=86&branchName=master) | [![Build Status](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_apis/build/status/ITLab-Reports?branchName=develop)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=86&branchName=develop)
+test | [![master tests](https://img.shields.io/azure-devops/tests/RTUITLab/RTU%20IT%20Lab/86/master?label=%20&style=plastic)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=86&branchName=master) | [![develop tests](https://img.shields.io/azure-devops/tests/RTUITLab/RTU%20IT%20Lab/86/develop?label=%20&style=plastic)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=86&branchName=develop)
 
 ## Configuration
 

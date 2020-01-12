@@ -1,0 +1,22 @@
+projectUId: a9820e50-0255-11ea-b948-ddbde374735a
+type: Project
+name: Project
+environments:
+  environments:
+    localEnv:
+      basePath: 'http://localhost:8080'
+    testmace:
+      basePath: 'http://test-api:8080'
+children:
+  - Simple tests
+variables: {}
+authData:
+  type: inherit
+settings:
+  proxy:
+    enable: false
+requestData:
+  headers: []
+  disabledInheritedHeaders: []
+  strictSSL: 'No'
+cookies: []

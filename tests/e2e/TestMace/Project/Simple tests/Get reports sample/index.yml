@@ -1,0 +1,30 @@
+children:
+  - Assertions
+variables: {}
+type: RequestStep
+assignVariables: []
+requestData:
+  request:
+    method: GET
+    url: '${$env.basePath}/reports/Anton?dateBegin=01.11.2016&dateEnd=05.01.2021'
+  headers: []
+  disabledInheritedHeaders: []
+  params:
+    - name: dateBegin
+      value: 01.11.2016
+      isChecked: true
+    - name: dateEnd
+      value: 05.01.2021
+      isChecked: true
+  body:
+    type: Json
+    jsonBody: ''
+    xmlBody: ''
+    textBody: ''
+    formData: []
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+authData:
+  type: inherit
+name: Get reports sample

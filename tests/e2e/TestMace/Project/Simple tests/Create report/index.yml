@@ -1,0 +1,39 @@
+children:
+  - Assertions
+variables:
+  checkCount: '0'
+type: RequestStep
+assignVariables:
+  - assign:
+      type: reference
+      refNodePath: Project/Simple tests
+    path: 'body[id]'
+    variable: reportId
+requestData:
+  request:
+    method: POST
+    url: '${$env.basePath}/reports'
+  headers:
+    - isChecked: true
+      name: Date
+      value: 'Wed, 21 Oct 2015 07:28:00'
+    - isChecked: true
+      name: CustomAuthor
+      value: Anton
+  disabledInheritedHeaders: []
+  params: []
+  body:
+    type: Json
+    jsonBody: |-
+      {
+        text:"made thing 1"
+      }
+    xmlBody: ''
+    textBody: ''
+    formData: []
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+authData:
+  type: inherit
+name: Create report
