@@ -3,6 +3,11 @@ children:
   - Create report
   - Get reports (one)
   - Get one report
+  - Create report 2
+  - Create report 3
+  - Get reports (sorted by date)
+  - Get reports (sorted by name)
+  - Get reports sample
 variables: {}
 type: Folder
 authData:

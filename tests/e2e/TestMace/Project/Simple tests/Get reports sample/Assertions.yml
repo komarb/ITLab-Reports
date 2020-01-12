@@ -1,0 +1,28 @@
+children: []
+variables: {}
+type: Assertion
+assertions:
+  - disabled: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValue: '200'
+  - disabled: false
+    type: script
+    script: >
+      console.log(tm.currentNode.parent.vars.checkCount)
+
+      assert(Array.isArray(tm.currentNode.parent.response.body), 'Body must be
+      an array')
+    name: Body must be an array
+  - disabled: false
+    type: compare
+    actualValue: '${$response.body[0].date}'
+    operator: equal
+    expectedValue: '2020-01-12T02:51:00'
+  - disabled: false
+    type: compare
+    actualValue: '${$response.body[0].reportSender}'
+    operator: equal
+    expectedValue: Anton
+name: Assertions

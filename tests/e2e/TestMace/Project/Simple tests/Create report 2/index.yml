@@ -1,14 +1,8 @@
 children:
   - Assertions
-variables:
-  checkCount: '0'
+variables: {}
 type: RequestStep
-assignVariables:
-  - assign:
-      type: reference
-      refNodePath: Project/Simple tests
-    path: 'body[id]'
-    variable: reportId
+assignVariables: []
 requestData:
   request:
     method: POST
@@ -16,10 +10,10 @@ requestData:
   headers:
     - isChecked: true
       name: Date
-      value: 'Wed, 21 Oct 2015 07:28:00'
+      value: 'Sun, 12 Jan 2020 02:49:00'
     - isChecked: true
       name: CustomAuthor
-      value: Anton
+      value: Boris
   disabledInheritedHeaders: []
   params: []
   body:
@@ -36,4 +30,4 @@ requestData:
   strictSSL: Inherit
 authData:
   type: inherit
-name: Create report
+name: Create report 2

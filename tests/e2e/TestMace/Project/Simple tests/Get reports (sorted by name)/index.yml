@@ -1,0 +1,27 @@
+children:
+  - Assertions
+variables: {}
+type: RequestStep
+assignVariables: []
+requestData:
+  request:
+    method: GET
+    url: '${$env.basePath}/reports?sorted_by=name'
+  headers: []
+  disabledInheritedHeaders: []
+  params:
+    - name: sorted_by
+      value: name
+      isChecked: true
+  body:
+    type: Json
+    jsonBody: ''
+    xmlBody: ''
+    textBody: ''
+    formData: []
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+authData:
+  type: inherit
+name: Get reports (sorted by name)
