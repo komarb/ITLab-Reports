@@ -47,13 +47,18 @@ func (a *App) Init(config *config.Config) {
 	a.setRouters()
 }
 func (a *App) setRouters() {
-	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
-	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
-	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
-	a.Router.HandleFunc("/reports", createReport).Methods("POST")
-	a.Router.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
-	a.Router.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
+	a.Router.HandleFunc("/get-token", getToken).Methods("GET")
+
+
+	s := a.Router.PathPrefix("").Subrouter()
+	s.Use(jwtMiddleware.Handler)
+	s.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	s.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	s.HandleFunc("/reports", getAllReports).Methods("GET")
+	s.HandleFunc("/reports/{id}", getReport).Methods("GET")
+	s.HandleFunc("/reports", createReport).Methods("POST")
+	s.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
+	s.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
 }
 func (a *App) Run(addr string) {
 	err := http.ListenAndServe(addr, a.Router)

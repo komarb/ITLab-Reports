@@ -5,14 +5,45 @@ import (
 	"../utils"
 	"context"
 	"encoding/json"
+	"github.com/auth0/go-jwt-middleware"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/auth0-community/auth0"
 	"log"
 	"net/http"
 	"time"
 )
+
+var mySigningKey = []byte("krasava")
+
+func getToken(w http.ResponseWriter, r *http.Request) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["admin"] = true
+	claims["name"] = "Bogdan"
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	tokenString, _ := token.SignedString(mySigningKey)
+
+	w.Write([]byte(tokenString))
+
+}
+func commonMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+	})
+}
+
+var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	},
+	SigningMethod: jwt.SigningMethodHS256,
+})
+
+
 
 func getAllReports(w http.ResponseWriter, r *http.Request) {
 	reports := make([]models.Report, 0)

@@ -1,5 +1,5 @@
 {
-  "host": "db",
+  "host": "localhost",
   "port": "27017",
   "dbname" : "ITLabReports",
   "collectionName" : "reports"
