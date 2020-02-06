@@ -8,13 +8,24 @@ test | [![master tests](https://img.shields.io/azure-devops/tests/RTUITLab/RTU%2
 
 ## Configuration
 
-File ```src/ITLabReports/api/config.json``` must contains next content:
+File ```src/ITLabReports/api/config.json``` must contain next content:
 
 ```json
 {
-  "host": "host to mongodb server",
-  "port": "port to mongodb server",
-  "dbname" : "database name on mongodb server",
-  "collectionName" : "collection name in database"
+  "DbOptions": {
+    "host": "host to mongodb server",
+    "port": "port to mongodb server",
+    "dbname" : "name of db in mongodb",
+    "collectionName" : "name of collection in mongodb"
+  },
+  "AuthOptions": {
+    "keyUrl" : "url jwks.json",
+    "audience" : "audience for JWT auth",
+    "testKeyUrl" : "https://pastebin.com/raw/D7UL1cbH"
+  },
+  "AppOptions": {
+    "testMode": true | false 
+  }
 }
+
 ```
