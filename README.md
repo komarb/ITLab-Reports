@@ -19,12 +19,12 @@ File ```src/ITLabReports/api/config.json``` must contain next content:
     "collectionName" : "name of collection in mongodb"
   },
   "AuthOptions": {
-    "keyUrl" : "url jwks.json",
+    "keyUrl" : "url to jwks.json",
     "audience" : "audience for JWT auth",
     "testKeyUrl" : "https://pastebin.com/raw/D7UL1cbH"
   },
   "AppOptions": {
-    "testMode": true | false 
+    "testMode": true or false 
   }
 }
 
