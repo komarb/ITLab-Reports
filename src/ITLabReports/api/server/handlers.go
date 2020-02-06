@@ -15,6 +15,7 @@ import (
 )
 
 func getAllReports(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -32,6 +33,7 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -59,6 +61,7 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 func getReport(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
 	json.NewDecoder(r.Body).Decode(&report)
@@ -81,6 +84,7 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(report)
 }
 func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	//query string: db.reports.find({"reportsender":"Anton", "$and" : [{"date" : {"$gte":"2019-12-31"}}, {"date" : {"$lte" : "2020-01-06"}} ]})
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
@@ -116,6 +120,7 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 func createReport(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
 	json.NewDecoder(r.Body).Decode(&report)
@@ -135,6 +140,7 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(report)
 }
 func updateReport(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	var report models.Report
 	var updatedReport models.Report
 	w.Header().Set("Content-Type", "application/json")
@@ -164,6 +170,7 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedReport)
 }
 func deleteReport(w http.ResponseWriter, r *http.Request) {
+	getTokenAndCheckScope(w,r)
 	w.Header().Set("Content-Type", "application/json")
 	data := mux.Vars(r)
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
@@ -180,3 +187,4 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(200)
 }
+
