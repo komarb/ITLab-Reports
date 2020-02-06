@@ -1,6 +1,16 @@
 {
-  "host": "localhost",
-  "port": "27017",
-  "dbname" : "ITLabReports",
-  "collectionName" : "reports"
+  "DbOptions": {
+    "host": "localhost",
+    "port": "27017",
+    "dbname" : "ITLabReports",
+    "collectionName" : "reports"
+  },
+  "AuthOptions": {
+    "keyUrl" : "https://pastebin.com/raw/D7UL1cbH",
+    "audience" : "itlab",
+    "testKeyUrl" : "https://pastebin.com/raw/D7UL1cbH"
+  },
+  "AppOptions": {
+    "testMode": true
+  }
 }

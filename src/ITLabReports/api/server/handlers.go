@@ -93,8 +93,6 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	employee := data["employee"]
 	dateBegin := utils.FormatQueryDate(data["dateBegin"])+"T00:00:00"
 	dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
-	log.Println(dateBegin)
-	log.Println(dateEnd)
 	findOptions := options.Find().SetSort(bson.M{"date": 1})
 	filter := bson.D{
 		{"reportsender" ,employee},
@@ -116,7 +114,6 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(len(reports))
 	json.NewEncoder(w).Encode(reports)
 }
 func createReport(w http.ResponseWriter, r *http.Request) {

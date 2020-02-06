@@ -49,7 +49,7 @@ var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 			return token, errors.New("Invalid issuer")
 		}
 
-		cert, err := getPemCert(token)
+		cert, err := getPemCert(keyURL,token)
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -64,9 +64,9 @@ var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	SigningMethod: jwt.SigningMethodRS256,
 })
 
-func getPemCert(token *jwt.Token) (string, error) {
+func getPemCert(key string, token *jwt.Token) (string, error) {
 	cert := ""
-	resp, err := http.Get("https://pastebin.com/raw/D7UL1cbH")
+	resp, err := http.Get(key)
 
 	if err != nil {
 		return cert, err
@@ -95,7 +95,7 @@ func getPemCert(token *jwt.Token) (string, error) {
 
 func checkScope(scope string, tokenString string) bool {
 	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
-		cert, err := getPemCert(token)
+		cert, err := getPemCert(keyURL, token)
 		if err != nil {
 			return nil, err
 		}

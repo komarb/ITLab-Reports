@@ -17,8 +17,14 @@ type App struct {
 	DB *mongo.Client
 }
 var collection *mongo.Collection
+var keyURL string
 
 func (a *App) Init(config *config.Config) {
+	if(config.App.TestMode) {
+		keyURL = config.Auth.TestKeyURL
+	} else {
+		keyURL = config.Auth.KeyURL
+	}
 	DBUri := "mongodb://" + config.DB.Host + ":" + config.DB.Port
 	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
 	if err != nil {
