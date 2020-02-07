@@ -21,7 +21,8 @@ type DBConfig struct {
 type AuthConfig struct {
 	KeyURL		string		`json:"keyUrl"`
 	Audience	string		`json:"audience"`
-	TestKeyURL	string		`json:"testKeyUrl"`
+	Issuer		string		`json:"issuer"`
+	Scope		string		`json:"scope"`
 }
 type AppConfig struct {
 	TestMode	bool	`json:"testMode"`
@@ -30,6 +31,15 @@ type AppConfig struct {
 func GetConfig() *Config {
 	var config Config
 	data, err := ioutil.ReadFile("src/ITLabReports/api/config.json")
+	if err != nil {
+		log.Panic(err)
+	}
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	data, err = ioutil.ReadFile("src/ITLabReports/api/auth_config.json")
 	if err != nil {
 		log.Panic(err)
 	}

@@ -31,37 +31,51 @@ type JSONWebKeys struct {
 type CustomClaims struct {
 	jwt.StandardClaims
 	Scope []string `json:"scope"`
+	Sub 	string	`json:"sub"`
 }
 
 var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-
-		aud := "itlab"
+		if(cfg.App.TestMode) {
+			return nil, nil
+		}
+		aud := cfg.Auth.Audience
 		checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, true)
 		if !checkAud {
 			return token, errors.New("Invalid audience")
 		}
 
 		// Verify 'iss' claim
-		iss := "https://dev.identity.rtuitlab.ru"
+		iss := cfg.Auth.Issuer
 		checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, true)
 		if !checkIss {
 			return token, errors.New("Invalid issuer")
 		}
 
-		cert, err := getPemCert(keyURL,token)
+		cert, err := getPemCert(cfg.Auth.KeyURL,token)
 		if err != nil {
 			log.Println(err.Error())
 		}
 
-
 		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+		if !checkScope(cfg.Auth.Scope, token.Raw) {
+			return token, errors.New("Invalid scope")
+		}
+
 		return result, nil
 
 
 
 	},
 	SigningMethod: jwt.SigningMethodRS256,
+})
+
+var mySigningKey = []byte("test")
+var testJwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	},
+	SigningMethod: jwt.SigningMethodHS256,
 })
 
 func getPemCert(key string, token *jwt.Token) (string, error) {
@@ -95,7 +109,7 @@ func getPemCert(key string, token *jwt.Token) (string, error) {
 
 func checkScope(scope string, tokenString string) bool {
 	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
-		cert, err := getPemCert(keyURL, token)
+		cert, err := getPemCert(cfg.Auth.KeyURL, token)
 		if err != nil {
 			return nil, err
 		}
@@ -116,14 +130,19 @@ func checkScope(scope string, tokenString string) bool {
 	return hasScope
 }
 
-func getTokenAndCheckScope(w http.ResponseWriter, r *http.Request){
+func getSubClaim(r *http.Request) string {
 	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
-	token := authHeaderParts[1]
+	tokenString := authHeaderParts[1]
 
-	if !checkScope("rtuitlab.reports", token) {
-		message := "Insufficient scope."
-		w.WriteHeader(401)
-		w.Write([]byte(message))
-		return
-	}
+	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
+		cert, err := getPemCert(cfg.Auth.KeyURL, token)
+		if err != nil {
+			return nil, err
+		}
+		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+		return result, nil
+	})
+
+	claims, _ := token.Claims.(*CustomClaims)
+	return claims.Sub
 }

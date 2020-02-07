@@ -11,9 +11,6 @@ requestData:
     - isChecked: true
       name: Date
       value: 'Sun, 12 Jan 2020 02:49:00'
-    - isChecked: true
-      name: CustomAuthor
-      value: Boris
   disabledInheritedHeaders: []
   params: []
   body:

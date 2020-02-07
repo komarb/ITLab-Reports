@@ -17,15 +17,11 @@ type App struct {
 	DB *mongo.Client
 }
 var collection *mongo.Collection
-var keyURL string
+var cfg *config.Config
 
 func (a *App) Init(config *config.Config) {
-	if(config.App.TestMode) {
-		keyURL = config.Auth.TestKeyURL
-	} else {
-		keyURL = config.Auth.KeyURL
-	}
-	DBUri := "mongodb://" + config.DB.Host + ":" + config.DB.Port
+	cfg = config
+	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.Port
 	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
 	if err != nil {
 		log.Panic(err)
@@ -45,16 +41,19 @@ func (a *App) Init(config *config.Config) {
 		log.Panic(err)
 	}
 	fmt.Println("Connected to MongoDB!")
-	fmt.Println("DB name: " + config.DB.DBName+", collection: " + config.DB.CollectionName)
+	fmt.Println("DB name: " + cfg.DB.DBName+", collection: " + cfg.DB.CollectionName)
 
-	collection = client.Database(config.DB.DBName).Collection(config.DB.CollectionName)
+	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
 
 	a.Router = mux.NewRouter()
 	a.setRouters()
 }
 func (a *App) setRouters() {
-
-	a.Router.Use(jwtMiddleware.Handler)
+	if(cfg.App.TestMode) {
+		a.Router.Use(testJwtMiddleware.Handler)
+	} else {
+		a.Router.Use(jwtMiddleware.Handler)
+	}
 	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
 	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
 	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")

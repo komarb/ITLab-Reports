@@ -1,4 +1,4 @@
-//TODO: To make prod ver - change ReadFile directory of config file to "congif.json" and db host from mongo docker hostS to "localhost"
+//TODO: To make prod ver - change ReadFile directory of config file to "config.json" and db host from mongo docker hostS to "localhost"
 package main
 
 import (
@@ -7,10 +7,12 @@ import (
 	"fmt"
 )
 
+
+
 func main() {
-	config := config.GetConfig()
+	cfg := config.GetConfig()
 	app := &server.App{}
-	app.Init(config)
+	app.Init(cfg)
 	app.Run(":8080")
 	fmt.Scanln()
 }
