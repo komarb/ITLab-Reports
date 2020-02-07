@@ -23,3 +23,35 @@ File ```src/ITLabReports/api/config.json``` must contain next content:
   }
 }
 ```
+
+File ```src/ITLabReports/api/auth_config.json``` must contain next content:
+
+```js
+{
+  "AuthOptions": {
+    "keyUrl": "https://examplesite/files/jwks.json", //url to jwks.json
+    "audience": "example_audience", //audince for JWT
+    "issuer" : "https://exampleissuersite.com", //issuer for JWT
+    "scope" : "my_scope" //required scope for JWT
+  }
+}
+
+```
+## jwks.json
+Example for jwks.json file
+```js
+{
+   "keys":[
+      {
+         "kty":"RSA", //The family of cryptographic algorithms used with the key.
+         "use":"sig", //How the key was meant to be used; sig represents the signature.
+         "x5c":[ //The x.509 certificate chain. The first entry in the array is the certificate to use for token verification; the other certificates can be used to verify this first certificate.
+            "123"
+         ],
+         "n":"456", //The modulus for the RSA public key.
+         "e":"AQAB", //The exponent for the RSA public key.
+         "kid":"789" //The unique identifier for the key.
+      }
+   ]
+}
+```
