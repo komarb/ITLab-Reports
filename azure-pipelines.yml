@@ -42,7 +42,7 @@ stages:
       inputs:
         command: 'get'
         arguments: 'get github.com/auth0/go-jwt-middleware'
-     - task: Go@0
+    - task: Go@0
       displayName: get go.mongodb.org/mongo-driver/mongo
       inputs:
         command: 'get'
