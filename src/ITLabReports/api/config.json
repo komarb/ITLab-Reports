@@ -1,6 +1,6 @@
 {
   "DbOptions": {
-    "host": "localhost",
+    "host": "itlabreports_db_1",
     "port": "27017",
     "dbname" : "ITLabReports",
     "collectionName" : "reports"

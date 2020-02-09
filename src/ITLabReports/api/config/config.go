@@ -30,7 +30,7 @@ type AppConfig struct {
 
 func GetConfig() *Config {
 	var config Config
-	data, err := ioutil.ReadFile("src/ITLabReports/api/config.json")
+	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -39,7 +39,7 @@ func GetConfig() *Config {
 		log.Panic(err)
 	}
 
-	data, err = ioutil.ReadFile("src/ITLabReports/api/auth_config.json")
+	data, err = ioutil.ReadFile("auth_config.json")
 	if err != nil {
 		log.Panic(err)
 	}
