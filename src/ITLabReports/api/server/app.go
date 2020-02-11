@@ -1,7 +1,7 @@
 package server
 
 import (
-	"../config"
+	"ITLabReports/config"
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"

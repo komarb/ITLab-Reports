@@ -1,8 +1,8 @@
 package server
 
 import (
-	"../models"
-	"../utils"
+	"ITLabReports/models"
+	"ITLabReports/utils"
 	"context"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -15,7 +15,6 @@ import (
 )
 
 func getAllReports(w http.ResponseWriter, r *http.Request) {
-
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -82,7 +81,6 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(report)
 }
 func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
-	//query string: db.reports.find({"reportsender":"Anton", "$and" : [{"date" : {"$gte":"2019-12-31"}}, {"date" : {"$lte" : "2020-01-06"}} ]})
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 
@@ -117,10 +115,6 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
 	json.NewDecoder(r.Body).Decode(&report)
-
-
-	/*tokenInfo := fmt.Sprintf("%v", r.Context().Value("user"))
-	log.Println(tokenInfo)*/
 
 	report.ReportSender = getSubClaim(r)
 
@@ -170,7 +164,6 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 }
 func deleteReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
 
 	sub := getSubClaim(r)
 

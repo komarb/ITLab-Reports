@@ -45,7 +45,6 @@ var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 			return token, errors.New("Invalid audience")
 		}
 
-		// Verify 'iss' claim
 		iss := cfg.Auth.Issuer
 		checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, true)
 		if !checkIss {
