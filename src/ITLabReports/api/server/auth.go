@@ -32,6 +32,7 @@ type CustomClaims struct {
 	jwt.StandardClaims
 	Scope []string `json:"scope"`
 	Sub 	string	`json:"sub"`
+	Role 	string	`json:"role"`
 }
 
 var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
@@ -129,7 +130,7 @@ func checkScope(scope string, tokenString string) bool {
 	return hasScope
 }
 
-func getSubClaim(r *http.Request) string {
+func getClaim(r *http.Request, claim string) (string, error) {
 	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
 	tokenString := authHeaderParts[1]
 
@@ -143,5 +144,12 @@ func getSubClaim(r *http.Request) string {
 	})
 
 	claims, _ := token.Claims.(*CustomClaims)
-	return claims.Sub
+	switch claim {
+	case "sub":
+		return claims.Sub, nil
+	case "role":
+		return claims.Role, nil
+	default:
+		return "", errors.New("no such claim")
+	}
 }

@@ -49,7 +49,7 @@ func (a *App) Init(config *config.Config) {
 	a.setRouters()
 }
 func (a *App) setRouters() {
-	if(cfg.App.TestMode) {
+	if cfg.App.TestMode {
 		a.Router.Use(testJwtMiddleware.Handler)
 	} else {
 		a.Router.Use(jwtMiddleware.Handler)

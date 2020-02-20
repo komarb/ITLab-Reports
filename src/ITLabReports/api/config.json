@@ -1,11 +1,11 @@
 {
   "DbOptions": {
-    "host": "itlabreports_db_1",
+    "host": "localhost",
     "port": "27017",
     "dbname" : "ITLabReports",
     "collectionName" : "reports"
   },
   "AppOptions": {
-    "testMode": false
+    "testMode": true
   }
 }
