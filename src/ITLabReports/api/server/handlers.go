@@ -21,11 +21,13 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
 
 	switch roleClaim {
@@ -34,7 +36,7 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	case "user":
 		filter = bson.M{"reportsender": subClaim}
 	default:
-		w.WriteHeader(401)
+		w.WriteHeader(403)
 		w.Write([]byte("wrong role claim"))
 		return
 	}
@@ -58,23 +60,25 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
-
 	switch roleClaim {
 	case "admin":
 		filter = bson.M{}
 	case "user":
 		filter = bson.M{"reportsender": subClaim}
 	default:
-		w.WriteHeader(401)
+		w.WriteHeader(403)
 		w.Write([]byte("wrong role claim"))
 		return
 	}
+
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	data := mux.Vars(r)
 	sortVar := data["var"]
@@ -115,23 +119,16 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	switch roleClaim {
-	case "admin":
-		filter = bson.M{"_id": objID}
-	case "user":
-		filter = bson.M{"_id": objID, "reportsender": subClaim}
-	default:
-		w.WriteHeader(401)
-		w.Write([]byte("wrong role claim"))
+		utils.AuthError(w, err)
 		return
 	}
+	filter = bson.M{"_id": objID}
+
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&report)
@@ -139,7 +136,12 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	json.NewEncoder(w).Encode(report)
+	if report.ReportSender == subClaim || roleClaim == "admin" {
+		json.NewEncoder(w).Encode(report)
+	} else {
+		w.WriteHeader(403)
+		return
+	}
 }
 func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	var filter bson.D
@@ -154,11 +156,13 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		log.Fatal(err)
+		utils.AuthError(w, err)
+		return
 	}
 	if employee == subClaim || roleClaim == "admin" {
 		filter = bson.D{
@@ -169,7 +173,7 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 			}},
 		}
 	} else {
-		w.WriteHeader(401)
+		w.WriteHeader(403)
 		return
 	}
 
@@ -195,7 +199,8 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		log.Panic(err)
+		utils.AuthError(w, err)
+		return
 	}
 	report.ReportSender = subClaim
 
@@ -217,10 +222,6 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	var updatedReport models.Report
 	w.Header().Set("Content-Type", "application/json")
-	sub, err := getClaim(r, "sub")
-	if err != nil {
-		log.Panic(err)
-	}
 	json.NewDecoder(r.Body).Decode(&report)
 	data := mux.Vars(r)
 
@@ -229,30 +230,42 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	filter := bson.M{"_id": objID, "reportSender": sub}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	filter := bson.M{"_id": objID}
 
-	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&updatedReport)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	updatedReport.Text = report.Text
-	updateResult, err := collection.ReplaceOne(ctx, filter, updatedReport)
-	if err != nil || updateResult.MatchedCount == 0 {
-		http.NotFound(w, r)
+	roleClaim, err := getClaim(r, "role")
+	if err != nil {
+		utils.AuthError(w, err)
 		return
 	}
-	json.NewEncoder(w).Encode(updatedReport)
+	subClaim, err := getClaim(r, "sub")
+	if err != nil {
+		utils.AuthError(w, err)
+		return
+	}
+
+	if updatedReport.ReportSender == subClaim || roleClaim == "admin" {
+		updatedReport.Text = report.Text
+		updateResult, err := collection.ReplaceOne(ctx, filter, updatedReport)
+		if err != nil || updateResult.MatchedCount == 0 {
+			http.NotFound(w, r)
+			return
+		}
+		json.NewEncoder(w).Encode(updatedReport)
+	} else {
+		w.WriteHeader(403)
+		return
+	}
+
 }
 func deleteReport(w http.ResponseWriter, r *http.Request) {
+	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
-
-	sub, err := getClaim(r, "sub")
-	if err != nil {
-		log.Panic(err)
-	}
 
 	data := mux.Vars(r)
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
@@ -260,13 +273,34 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	filter := bson.M{"_id": objID, "reportSender": sub}
+	filter := bson.M{"_id": objID}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	deleteResult, err := collection.DeleteOne(ctx, filter)
-	if err != nil || deleteResult.DeletedCount == 0 {
+	err = collection.FindOne(ctx, filter).Decode(&report)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	w.WriteHeader(200)
+	roleClaim, err := getClaim(r, "role")
+	if err != nil {
+		utils.AuthError(w, err)
+		return
+	}
+	subClaim, err := getClaim(r, "sub")
+	if err != nil {
+		utils.AuthError(w, err)
+		return
+	}
+	if report.ReportSender == subClaim || roleClaim == "admin" {
+		ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+		deleteResult, err := collection.DeleteOne(ctx, filter)
+		if err != nil || deleteResult.DeletedCount == 0 {
+			http.NotFound(w, r)
+			return
+		}
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(403)
+		return
+	}
 }
 

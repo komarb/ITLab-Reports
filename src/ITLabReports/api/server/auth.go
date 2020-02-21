@@ -37,7 +37,7 @@ type CustomClaims struct {
 
 var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-		if(cfg.App.TestMode) {
+		if cfg.App.TestMode {
 			return nil, nil
 		}
 		aud := cfg.Auth.Audience
@@ -146,10 +146,19 @@ func getClaim(r *http.Request, claim string) (string, error) {
 	claims, _ := token.Claims.(*CustomClaims)
 	switch claim {
 	case "sub":
-		return claims.Sub, nil
+		if claims.Sub != "" {
+			return claims.Sub, nil
+		} else {
+			return "", errors.New("there is no Sub claim in token")
+		}
 	case "role":
+		if claims.Role != "" {
+			return claims.Role, nil
+		} else {
+			return "", errors.New("there is no Role claim in token")
+		}
 		return claims.Role, nil
 	default:
-		return "", errors.New("no such claim")
+		return "", errors.New("requested claim is invalid")
 	}
 }
