@@ -7,7 +7,9 @@ import (
 )
 
 type Config struct {
-	DB *DBConfig
+	DB *DBConfig	`json:"DbOptions"`
+	Auth *AuthConfig	`json:"AuthOptions"`
+	App *AppConfig		`json:"AppOptions"`
 }
 
 type DBConfig struct {
@@ -16,6 +18,15 @@ type DBConfig struct {
 	DBName 		string		`json:"dbname"`
 	CollectionName 	string 	`json:"collectionName"`
 }
+type AuthConfig struct {
+	KeyURL		string		`json:"keyUrl"`
+	Audience	string		`json:"audience"`
+	Issuer		string		`json:"issuer"`
+	Scope		string		`json:"scope"`
+}
+type AppConfig struct {
+	TestMode	bool	`json:"testMode"`
+}
 
 func GetConfig() *Config {
 	var config Config
@@ -23,7 +34,16 @@ func GetConfig() *Config {
 	if err != nil {
 		log.Panic(err)
 	}
-	err = json.Unmarshal(data, &config.DB)
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	data, err = ioutil.ReadFile("auth_config.json")
+	if err != nil {
+		log.Panic(err)
+	}
+	err = json.Unmarshal(data, &config)
 	if err != nil {
 		log.Panic(err)
 	}

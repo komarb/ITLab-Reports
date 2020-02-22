@@ -17,9 +17,6 @@ requestData:
     - isChecked: true
       name: Date
       value: 'Wed, 21 Oct 2015 07:28:00'
-    - isChecked: true
-      name: CustomAuthor
-      value: Anton
   disabledInheritedHeaders: []
   params: []
   body:

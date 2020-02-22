@@ -13,7 +13,10 @@ type: Folder
 authData:
   type: inherit
 requestData:
-  headers: []
+  headers:
+    - isChecked: true
+      name: Authorization
+      value: 'Bearer ${$env.testJWT}'
   disabledInheritedHeaders: []
   strictSSL: Inherit
 name: Simple tests
