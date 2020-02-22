@@ -42,7 +42,8 @@ stages:
       displayName: build
       inputs:
         command: 'build'
-        arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v ./src/ITLabReports/api'
+        arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v'
+        workingDirectory: 'src\ITLabReports\api'
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)'
