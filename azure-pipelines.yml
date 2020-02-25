@@ -28,9 +28,16 @@ stages:
         arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v'
         workingDirectory: 'src/ITLabReports/api'
     - task: PublishPipelineArtifact@1
+      displayName: 'Publish build artifact'
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'itlab-reports-api-build'
+        publishLocation: 'pipeline'
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish deploy artifact'
+      inputs:
+        targetPath: 'deploy'
+        artifact: 'itlab-reports-deploy'
         publishLocation: 'pipeline'
 
 - stage: Test
