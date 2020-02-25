@@ -32,9 +32,9 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 
 	switch roleClaim {
 	case "admin":
-		filter = bson.M{}
+		filter = bson.M{"archived" : false}
 	case "user":
-		filter = bson.M{"reportsender": subClaim}
+		filter = bson.M{"reportsender": subClaim, "archived" : false}
 	default:
 		w.WriteHeader(403)
 		w.Write([]byte("wrong role claim"))
@@ -70,9 +70,9 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	}
 	switch roleClaim {
 	case "admin":
-		filter = bson.M{}
+		filter = bson.M{"archived" : false}
 	case "user":
-		filter = bson.M{"reportsender": subClaim}
+		filter = bson.M{"reportsender": subClaim, "archived" : false}
 	default:
 		w.WriteHeader(403)
 		w.Write([]byte("wrong role claim"))
@@ -167,6 +167,7 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	if employee == subClaim || roleClaim == "admin" {
 		filter = bson.D{
 			{"reportsender" ,employee},
+			{"archived" , false},
 			{"$and", []interface{}{
 				bson.D{{"date",bson.M{"$gte": dateBegin}}},
 				bson.D{{"date", bson.M{"$lte" : dateEnd}}},
@@ -223,6 +224,7 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 	var updatedReport models.Report
 	w.Header().Set("Content-Type", "application/json")
 	json.NewDecoder(r.Body).Decode(&report)
+
 	data := mux.Vars(r)
 
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
@@ -251,6 +253,11 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 
 	if updatedReport.ReportSender == subClaim || roleClaim == "admin" {
 		updatedReport.Text = report.Text
+		if report.Text == "" {
+			updatedReport.Archived = true
+		} else {
+			updatedReport.Archived = false
+		}
 		updateResult, err := collection.ReplaceOne(ctx, filter, updatedReport)
 		if err != nil || updateResult.MatchedCount == 0 {
 			http.NotFound(w, r)
@@ -291,13 +298,14 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if report.ReportSender == subClaim || roleClaim == "admin" {
-		ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-		deleteResult, err := collection.DeleteOne(ctx, filter)
-		if err != nil || deleteResult.DeletedCount == 0 {
+		report.Archived = true
+		updateResult, err := collection.ReplaceOne(ctx, filter, report)
+		if err != nil || updateResult.MatchedCount == 0 {
 			http.NotFound(w, r)
 			return
 		}
 		w.WriteHeader(200)
+
 	} else {
 		w.WriteHeader(403)
 		return
