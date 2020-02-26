@@ -6,6 +6,6 @@
     "collectionName" : "reports"
   },
   "AppOptions": {
-    "testMode": true
+    "testMode": false
   }
 }

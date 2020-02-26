@@ -50,17 +50,18 @@ func (a *App) Init(config *config.Config) {
 }
 func (a *App) setRouters() {
 	if cfg.App.TestMode {
-		a.Router.Use(testJwtMiddleware.Handler)
+		a.Router.Use(testAuthMiddleware)
 	} else {
-		a.Router.Use(jwtMiddleware.Handler)
+		a.Router.Use(authMiddleware)
 	}
-	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
-	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
-	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
-	a.Router.HandleFunc("/reports", createReport).Methods("POST")
-	a.Router.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
-	a.Router.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
+
+	a.Router.HandleFunc("/api/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	a.Router.HandleFunc("/api/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/reports", getAllReports).Methods("GET")
+	a.Router.HandleFunc("/api/reports/{id}", getReport).Methods("GET")
+	a.Router.HandleFunc("/api/reports", createReport).Methods("POST")
+	a.Router.HandleFunc("/api/reports/{id}", updateReport).Methods("PUT")
+	a.Router.HandleFunc("/api/reports/{id}", deleteReport).Methods("DELETE")
 
 }
 func (a *App) Run(addr string) {
