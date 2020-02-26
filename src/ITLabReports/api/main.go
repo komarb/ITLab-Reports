@@ -1,15 +1,15 @@
 package main
 
 import (
-	"./config"
-	"./server"
+	"ITLabReports/config"
+	"ITLabReports/server"
 	"fmt"
 )
 
 func main() {
-	config := config.GetConfig()
+	cfg := config.GetConfig()
 	app := &server.App{}
-	app.Init(config)
+	app.Init(cfg)
 	app.Run(":8080")
 	fmt.Scanln()
 }

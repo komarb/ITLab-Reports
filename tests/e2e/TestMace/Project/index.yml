@@ -5,8 +5,17 @@ environments:
   environments:
     localEnv:
       basePath: 'http://localhost:8080'
+<<<<<<< HEAD
     testmace:
       basePath: 'http://test-api:8080'
+=======
+      testJWT: >-
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJhdWQiOiJpdGxhYiIsImlzcyI6Imh0dHBzOi8vZGV2LmlkZW50aXR5LnJ0dWl0bGFiLnJ1IiwiaWF0IjoxNTE2MjM5MDIyLCJzdWIiOiIzMjEtbG9sLTMyMSIsInJvbGUiOiJ1c2VyIiwic2NvcGUiOlsicm9sZXMiLCJvcGVuaWQiLCJwcm9maWxlIiwiaXRsYWIuZXZlbnRzIiwicnR1aXRsYWIucmVwb3J0cyJdfQ.c5q_pfy_eXVQQFiPaWzKQ22-D3M-JXLJP-QTrTUUAVw
+    testmace:
+      basePath: 'http://test-api:8080'
+      testJWT: >-
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJhdWQiOiJpdGxhYiIsImlzcyI6Imh0dHBzOi8vZGV2LmlkZW50aXR5LnJ0dWl0bGFiLnJ1IiwiaWF0IjoxNTE2MjM5MDIyLCJzdWIiOiIzMjEtbG9sLTMyMSIsInJvbGUiOiJ1c2VyIiwic2NvcGUiOlsicm9sZXMiLCJvcGVuaWQiLCJwcm9maWxlIiwiaXRsYWIuZXZlbnRzIiwicnR1aXRsYWIucmVwb3J0cyJdfQ.c5q_pfy_eXVQQFiPaWzKQ22-D3M-JXLJP-QTrTUUAVw
+>>>>>>> develop
 children:
   - Simple tests
 variables: {}

@@ -3,12 +3,27 @@ children:
   - Create report
   - Get reports (one)
   - Get one report
+<<<<<<< HEAD
+=======
+  - Create report 2
+  - Create report 3
+  - Get reports (sorted by date)
+  - Get reports (sorted by name)
+  - Get reports sample
+>>>>>>> develop
 variables: {}
 type: Folder
 authData:
   type: inherit
 requestData:
+<<<<<<< HEAD
   headers: []
+=======
+  headers:
+    - isChecked: true
+      name: Authorization
+      value: 'Bearer ${$env.testJWT}'
+>>>>>>> develop
   disabledInheritedHeaders: []
   strictSSL: Inherit
 name: Simple tests

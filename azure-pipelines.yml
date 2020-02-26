@@ -37,6 +37,16 @@ stages:
       inputs:
         command: 'get'
         arguments: 'go.mongodb.org/mongo-driver/mongo'
+    - task: Go@0
+      displayName: get go.mongodb.org/mongo-driver/mongo
+      inputs:
+        command: 'get'
+        arguments: 'github.com/auth0/go-jwt-middleware'
+    - task: Go@0
+      displayName: get go.mongodb.org/mongo-driver/mongo
+      inputs:
+        command: 'get'
+        arguments: 'github.com/dgrijalva/jwt-go'
 
     - task: Go@0
       displayName: build
@@ -48,6 +58,7 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'itlab-reports-api-build'
         publishLocation: 'pipeline'
+<<<<<<< HEAD
 
 - stage: Test
   displayName: Test reports service
@@ -58,6 +69,18 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
 
+=======
+
+- stage: Test
+  displayName: Test reports service
+  jobs:
+  - job: Test
+    displayName: Test
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+>>>>>>> develop
     steps:
     - task: DownloadPipelineArtifact@2
       inputs:

@@ -1,7 +1,7 @@
 package server
 
 import (
-	"../config"
+	"ITLabReports/config"
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -17,9 +17,11 @@ type App struct {
 	DB *mongo.Client
 }
 var collection *mongo.Collection
+var cfg *config.Config
 
 func (a *App) Init(config *config.Config) {
-	DBUri := "mongodb://" + config.DB.Host + ":" + config.DB.Port
+	cfg = config
+	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.Port
 	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
 	if err != nil {
 		log.Panic(err)
@@ -39,20 +41,27 @@ func (a *App) Init(config *config.Config) {
 		log.Panic(err)
 	}
 	fmt.Println("Connected to MongoDB!")
-	fmt.Println("DB name: " + config.DB.DBName+", collection: " + config.DB.CollectionName)
+	fmt.Println("DB name: " + cfg.DB.DBName+", collection: " + cfg.DB.CollectionName)
 
-	collection = client.Database(config.DB.DBName).Collection(config.DB.CollectionName)
+	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
 
 	a.Router = mux.NewRouter()
 	a.setRouters()
 }
 func (a *App) setRouters() {
+	if cfg.App.TestMode {
+		a.Router.Use(testJwtMiddleware.Handler)
+	} else {
+		a.Router.Use(jwtMiddleware.Handler)
+	}
 	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
 	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
 	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
 	a.Router.HandleFunc("/reports", createReport).Methods("POST")
 	a.Router.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
 	a.Router.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
+
 }
 func (a *App) Run(addr string) {
 	err := http.ListenAndServe(addr, a.Router)

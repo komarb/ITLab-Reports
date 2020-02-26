@@ -1,6 +1,18 @@
 {
+<<<<<<< HEAD
   "host": "db",
   "port": "27017",
   "dbname" : "ITLabReports",
   "collectionName" : "reports"
+=======
+  "DbOptions": {
+    "host": "localhost",
+    "port": "27017",
+    "dbname" : "ITLabReports",
+    "collectionName" : "reports"
+  },
+  "AppOptions": {
+    "testMode": true
+  }
+>>>>>>> develop
 }
