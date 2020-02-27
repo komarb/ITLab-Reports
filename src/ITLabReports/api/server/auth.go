@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/auth0-community/go-auth0"
 	"gopkg.in/square/go-jose.v2"
-	"log"
 	"net/http"
 )
 var validator *auth0.JWTValidator
@@ -13,7 +12,6 @@ var validator *auth0.JWTValidator
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Current token: ", r.Header.Get("Authorization"))
 		client := auth0.NewJWKClient(auth0.JWKClientOptions{URI: cfg.Auth.KeyURL}, nil)
 		audience := cfg.Auth.Audience
 		configuration := auth0.NewConfiguration(client, []string{audience}, cfg.Auth.Issuer, jose.RS256)
@@ -46,7 +44,6 @@ func authMiddleware(next http.Handler) http.Handler {
 			w.Write([]byte("Invalid scope"))
 			return
 		}
-		log.Println("Current claims: ", claims)
 		next.ServeHTTP(w, r)
 
 
@@ -55,11 +52,9 @@ func authMiddleware(next http.Handler) http.Handler {
 
 func testAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.Header.Get("Authorization"))
 		secret := []byte("test")
 		secretProvider := auth0.NewKeyProvider(secret)
-		audience := cfg.Auth.Audience
-		configuration := auth0.NewConfigurationTrustProvider(secretProvider, []string{audience}, cfg.Auth.Issuer)
+		configuration := auth0.NewConfigurationTrustProvider(secretProvider, nil, "")
 		validator = auth0.NewValidator(configuration, nil)
 		token, err := validator.ValidateRequest(r)
 		if err != nil {
@@ -70,9 +65,6 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		claims := map[string]interface{}{}
-		err = validator.Claims(r, token, &claims)
-		log.Println("Current claims: ", claims)
 		next.ServeHTTP(w, r)
 	})
 }
