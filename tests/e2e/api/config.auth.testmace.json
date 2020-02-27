@@ -1,0 +1,8 @@
+{
+    "AuthOptions": {
+        "keyUrl": "https://examplesite/files/jwks.json",
+        "audience": "example_audience",
+        "issuer": "https://exampleissuersite.com",
+        "scope": "itlab.reports"
+    }
+}
