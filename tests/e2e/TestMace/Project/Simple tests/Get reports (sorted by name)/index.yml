@@ -6,7 +6,7 @@ assignVariables: []
 requestData:
   request:
     method: GET
-    url: '${$env.basePath}/reports?sorted_by=name'
+    url: '${$env.basePath}/api/reports?sorted_by=name'
   headers: []
   disabledInheritedHeaders: []
   params:

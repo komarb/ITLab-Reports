@@ -1,163 +1,104 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/auth0/go-jwt-middleware"
-	"github.com/dgrijalva/jwt-go"
-	"log"
+	"fmt"
+	"github.com/auth0-community/go-auth0"
+	"gopkg.in/square/go-jose.v2"
 	"net/http"
-	"strings"
 )
+var validator *auth0.JWTValidator
 
-type Response struct {
-	Message string `json:"message"`
-}
 
-type Jwks struct {
-	Keys []JSONWebKeys `json:"keys"`
-}
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		client := auth0.NewJWKClient(auth0.JWKClientOptions{URI: cfg.Auth.KeyURL}, nil)
+		audience := cfg.Auth.Audience
+		configuration := auth0.NewConfiguration(client, []string{audience}, cfg.Auth.Issuer, jose.RS256)
+		validator = auth0.NewValidator(configuration, nil)
 
-type JSONWebKeys struct {
-	Kty string `json:"kty"`
-	Kid string `json:"kid"`
-	Use string `json:"use"`
-	N string `json:"n"`
-	E string `json:"e"`
-	X5c []string `json:"x5c"`
-	Alg string	`json:"alg"`
-}
-
-type CustomClaims struct {
-	jwt.StandardClaims
-	Scope []string `json:"scope"`
-	Sub 	string	`json:"sub"`
-	Role 	string	`json:"role"`
-}
-
-var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
-	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-		if cfg.App.TestMode {
-			return nil, nil
-		}
-		aud := cfg.Auth.Audience
-		checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, true)
-		if !checkAud {
-			return token, errors.New("Invalid audience")
-		}
-
-		iss := cfg.Auth.Issuer
-		checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, true)
-		if !checkIss {
-			return token, errors.New("Invalid issuer")
-		}
-
-		cert, err := getPemCert(cfg.Auth.KeyURL,token)
+		token, err := validator.ValidateRequest(r)
 		if err != nil {
-			log.Println(err.Error())
+			fmt.Println("Token is not valid:", token)
+			fmt.Println("Error:", err)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Token is not valid\nError: "))
+			w.Write([]byte(err.Error()))
+			return
 		}
 
-		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-		if !checkScope(cfg.Auth.Scope, token.Raw) {
-			return token, errors.New("Invalid scope")
-		}
-
-		return result, nil
-
-
-
-	},
-	SigningMethod: jwt.SigningMethodRS256,
-})
-
-var mySigningKey = []byte("test")
-var testJwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
-	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-		return mySigningKey, nil
-	},
-	SigningMethod: jwt.SigningMethodHS256,
-})
-
-func getPemCert(key string, token *jwt.Token) (string, error) {
-	cert := ""
-	resp, err := http.Get(key)
-
-	if err != nil {
-		return cert, err
-	}
-	defer resp.Body.Close()
-
-	var jwks = Jwks{}
-	err = json.NewDecoder(resp.Body).Decode(&jwks)
-	if err != nil {
-		return cert, err
-	}
-
-	for k, _ := range jwks.Keys {
-		if token.Header["kid"] == jwks.Keys[k].Kid {
-			cert = "-----BEGIN CERTIFICATE-----\n" + jwks.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
-		}
-	}
-
-	if cert == "" {
-		err := errors.New("Unable to find appropriate key.")
-		return cert, err
-	}
-
-	return cert, nil
-}
-
-func checkScope(scope string, tokenString string) bool {
-	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
-		cert, err := getPemCert(cfg.Auth.KeyURL, token)
+		claims := map[string]interface{}{}
+		err = validator.Claims(r, token, &claims)
 		if err != nil {
-			return nil, err
+			fmt.Println(err)
+			fmt.Println("Invalid claims")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Invalid claims"))
+			return
 		}
-		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-		return result, nil
+
+		if !checkScope(cfg.Auth.Scope, claims) {
+			fmt.Println(err)
+			fmt.Println("Invalid scope")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Invalid scope"))
+			return
+		}
+		next.ServeHTTP(w, r)
+
+
 	})
+}
 
-	claims, ok := token.Claims.(*CustomClaims)
-	hasScope := false
-	if ok && token.Valid {
-		for i := range claims.Scope {
-			if claims.Scope[i] == scope {
-				hasScope = true
-			}
+func testAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		secret := []byte("test")
+		secretProvider := auth0.NewKeyProvider(secret)
+		configuration := auth0.NewConfigurationTrustProvider(secretProvider, nil, "")
+		validator = auth0.NewValidator(configuration, nil)
+		token, err := validator.ValidateRequest(r)
+		if err != nil {
+			fmt.Println("Token is not valid:", token)
+			fmt.Println("Error:", err)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Token is not valid\nError: "))
+			w.Write([]byte(err.Error()))
+			return
 		}
-	}
+		next.ServeHTTP(w, r)
+	})
+}
+func checkScope(scopeStr string, claims map[string]interface{}) bool {
+	var hasScope = false
+	_, okScope := claims[scopeStr].(map[string]interface{})
 
+	if !okScope || okScope {
+		hasScope = true
+	}
 	return hasScope
 }
 
 func getClaim(r *http.Request, claim string) (string, error) {
-	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
-	tokenString := authHeaderParts[1]
+	token, err := validator.ValidateRequest(r)
+	if err != nil {
+		return "", err
+	}
+	claims := map[string]interface{}{}
+	err = validator.Claims(r, token, &claims)
 
-	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
-		cert, err := getPemCert(cfg.Auth.KeyURL, token)
-		if err != nil {
-			return nil, err
-		}
-		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-		return result, nil
-	})
-
-	claims, _ := token.Claims.(*CustomClaims)
 	switch claim {
 	case "sub":
-		if claims.Sub != "" {
-			return claims.Sub, nil
+		if _, ok := claims["sub"]; ok {
+			return fmt.Sprintf("%v", claims["sub"]), nil
 		} else {
 			return "", errors.New("there is no Sub claim in token")
 		}
 	case "role":
-		if claims.Role != "" {
-			return claims.Role, nil
+		if _, ok := claims["role"]; ok {
+			return fmt.Sprintf("%v", claims["role"]), nil
 		} else {
 			return "", errors.New("there is no Role claim in token")
 		}
-		return claims.Role, nil
 	default:
 		return "", errors.New("requested claim is invalid")
 	}

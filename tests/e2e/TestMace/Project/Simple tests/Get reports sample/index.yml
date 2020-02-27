@@ -7,7 +7,7 @@ requestData:
   request:
     method: GET
     url: >-
-      ${$env.basePath}/reports/321-lol-321?dateBegin=01.11.2016&dateEnd=05.01.2021
+      ${$env.basePath}/api/reports/321-lol-321?dateBegin=01.11.2016&dateEnd=05.01.2021
   headers: []
   disabledInheritedHeaders: []
   params:

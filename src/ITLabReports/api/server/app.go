@@ -4,6 +4,7 @@ import (
 	"ITLabReports/config"
 	"context"
 	"fmt"
+	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -24,21 +25,21 @@ func (a *App) Init(config *config.Config) {
 	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.Port
 	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
 	if err != nil {
-		log.Panic(err)
+		glog.Fatal(err)
 	}
 
 	// Create db connect
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Panic(err)
+		glog.Fatal(err)
 	}
 
 	// Check the connection
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Panic(err)
+		glog.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB!")
 	fmt.Println("DB name: " + cfg.DB.DBName+", collection: " + cfg.DB.CollectionName)
@@ -50,17 +51,20 @@ func (a *App) Init(config *config.Config) {
 }
 func (a *App) setRouters() {
 	if cfg.App.TestMode {
-		a.Router.Use(testJwtMiddleware.Handler)
+		a.Router.Use(testAuthMiddleware)
+		log.Println("Testmode: ON")
 	} else {
-		a.Router.Use(jwtMiddleware.Handler)
+		a.Router.Use(authMiddleware)
+		log.Println("Testmode: OFF")
 	}
-	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
-	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
-	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
-	a.Router.HandleFunc("/reports", createReport).Methods("POST")
-	a.Router.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
-	a.Router.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
+
+	a.Router.HandleFunc("/api/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	a.Router.HandleFunc("/api/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/reports", getAllReports).Methods("GET")
+	a.Router.HandleFunc("/api/reports/{id}", getReport).Methods("GET")
+	a.Router.HandleFunc("/api/reports", createReport).Methods("POST")
+	a.Router.HandleFunc("/api/reports/{id}", updateReport).Methods("PUT")
+	a.Router.HandleFunc("/api/reports/{id}", deleteReport).Methods("DELETE")
 
 }
 func (a *App) Run(addr string) {

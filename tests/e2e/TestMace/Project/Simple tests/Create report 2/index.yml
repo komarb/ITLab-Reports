@@ -6,7 +6,7 @@ assignVariables: []
 requestData:
   request:
     method: POST
-    url: '${$env.basePath}/reports'
+    url: '${$env.basePath}/api/reports'
   headers:
     - isChecked: true
       name: Date

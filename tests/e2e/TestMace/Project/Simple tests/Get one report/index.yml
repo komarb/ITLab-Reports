@@ -7,7 +7,7 @@ assignVariables: []
 requestData:
   request:
     method: GET
-    url: '${$env.basePath}/reports/${$dynamicVar.reportId}'
+    url: '${$env.basePath}/api/reports/${$dynamicVar.reportId}'
   headers: []
   disabledInheritedHeaders: []
   params: []

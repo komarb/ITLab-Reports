@@ -117,18 +117,17 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		utils.AuthError(w, err)
-		return
-	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
 		utils.AuthError(w, err)
 		return
 	}
+	roleClaim, err := getClaim(r, "role")
+	if err != nil {
+		utils.AuthError(w, err)
+		return
+	}
 	filter = bson.M{"_id": objID}
-
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&report)
