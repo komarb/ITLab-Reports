@@ -1,15 +1,16 @@
 package server
 
 import (
+	"ITLabReports/logging"
 	"ITLabReports/models"
 	"ITLabReports/utils"
 	"context"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"net/http"
 	"time"
 )
@@ -21,12 +22,12 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(role)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
 
@@ -36,36 +37,51 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	case "user":
 		filter = bson.M{"reportsender": subClaim, "archived" : false}
 	default:
+		log.WithFields(log.Fields{
+			"roleClaim" : roleClaim,
+			"handler" : "getAllReports",
+		}).Warning("Wrong role claim!")
 		w.WriteHeader(403)
-		w.Write([]byte("wrong role claim"))
+		w.Write([]byte("Wrong role claim!"))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.Find",
+			"handler" : "getAllReports",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cur.Close(ctx)
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	err = cur.All(ctx, &reports)
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.All",
+			"handler" : "getAllReports",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	json.NewEncoder(w).Encode(reports)
 }
+
 func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(role)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
 	switch roleClaim {
@@ -74,6 +90,10 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	case "user":
 		filter = bson.M{"reportsender": subClaim, "archived" : false}
 	default:
+		log.WithFields(log.Fields{
+			"roleClaim" : roleClaim,
+			"handler" : "getAllReportsSorted",
+		}).Warning("Wrong role claim!")
 		w.WriteHeader(403)
 		w.Write([]byte("wrong role claim"))
 		return
@@ -92,17 +112,28 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 
 	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.Find",
+			"handler" : "getAllReportsSorted",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cur.Close(ctx)
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	err = cur.All(ctx, &reports)
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.All",
+			"handler" : "getAllReports",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	json.NewEncoder(w).Encode(reports)
 }
+
 func getReport(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 	var report models.Report
@@ -117,14 +148,14 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		utils.AuthError(w, err)
-		return
-	}
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(role)")
+		return
+	}
+	subClaim, err := getClaim(r, "sub")
+	if err != nil {
+		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
 	filter = bson.M{"_id": objID}
@@ -142,6 +173,7 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	var filter bson.D
 	reports := make([]models.Report, 0)
@@ -155,12 +187,12 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(role)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
 	if employee == subClaim || roleClaim == "admin" {
@@ -180,7 +212,12 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.Find",
+			"handler" : "getEmployeeSample",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cur.Close(ctx)
@@ -188,10 +225,16 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	err = cur.All(ctx, &reports)
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.All",
+			"handler" : "getEmployeeSample",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	json.NewEncoder(w).Encode(reports)
 }
+
 func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
@@ -199,7 +242,7 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim (sub)")
 		return
 	}
 	report.ReportSender = subClaim
@@ -210,14 +253,18 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, err := collection.InsertOne(ctx, report)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.InsertOne",
+			"handler" : "createReport",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
 	}
 	id := result.InsertedID
 	report.ID, err = primitive.ObjectIDFromHex(id.(primitive.ObjectID).Hex())
-
-
 	json.NewEncoder(w).Encode(report)
 }
+
 func updateReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	var updatedReport models.Report
@@ -241,12 +288,12 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 	}
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(role)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
 
@@ -267,8 +314,8 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
 		return
 	}
-
 }
+
 func deleteReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	w.Header().Set("Content-Type", "application/json")
@@ -288,12 +335,12 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 	}
 	roleClaim, err := getClaim(r, "role")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(role)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
 	if err != nil {
-		utils.AuthError(w, err)
+		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
 	if report.ReportSender == subClaim || roleClaim == "admin" {
@@ -310,4 +357,3 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-

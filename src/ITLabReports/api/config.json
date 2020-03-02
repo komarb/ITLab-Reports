@@ -1,11 +1,12 @@
 {
   "DbOptions": {
     "host": "localhost",
-    "port": "27017",
-    "dbname" : "ITLabReports",
+    "dbPort": "27017",
+    "dbName" : "ITLabReports",
     "collectionName" : "reports"
   },
   "AppOptions": {
+    "appPort": "8080",
     "testMode": true
   }
 }
