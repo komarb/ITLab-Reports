@@ -70,9 +70,10 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 		configuration := auth0.NewConfigurationTrustProvider(secretProvider, nil, "")
 		validator = auth0.NewValidator(configuration, nil)
 		_, err := validator.ValidateRequest(r)
+
 		if err != nil {
 			log.WithFields(log.Fields{
-				"requiredAlgorithm" : "RS256",
+				"requiredAlgorithm" : "HS256",
 				"error" : err,
 			}).Warning("Token is not valid!")
 
@@ -83,7 +84,7 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		sw := logging.NewStatusWriter(w)
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(sw, r)
 		logging.LogHandler(sw, r)
 	})
 }

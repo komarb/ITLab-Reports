@@ -3,6 +3,7 @@ package server
 import (
 	"ITLabReports/config"
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,6 +22,7 @@ var cfg *config.Config
 
 func (a *App) Init(config *config.Config) {
 	cfg = config
+	fmt.Println(cfg.DB.DBPort)
 	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.DBPort
 	log.WithField("dburi", DBUri).Info("Current database URI: ")
 	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
@@ -71,6 +73,7 @@ func (a *App) setRouters() {
 	} else {
 		a.Router.Use(authMiddleware)
 	}
+
 	a.Router.HandleFunc("/api/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
 	a.Router.HandleFunc("/api/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
 	a.Router.HandleFunc("/api/reports", getAllReports).Methods("GET")
