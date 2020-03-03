@@ -174,6 +174,61 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getArchivedReports(w http.ResponseWriter, r *http.Request) {
+	reports := make([]models.Report, 0)
+	var filter bson.M
+
+	w.Header().Set("Content-Type", "application/json")
+	roleClaim, err := getClaim(r, "role")
+	if err != nil {
+		logging.AuthError(w, err, "getClaim(role)")
+		return
+	}
+	subClaim, err := getClaim(r, "sub")
+	if err != nil {
+		logging.AuthError(w, err, "getClaim(sub)")
+		return
+	}
+
+	switch roleClaim {
+	case "admin":
+		filter = bson.M{"archived" : true}
+	case "user":
+		filter = bson.M{"reportsender": subClaim, "archived" : true}
+	default:
+		log.WithFields(log.Fields{
+			"roleClaim" : roleClaim,
+			"handler" : "getArchievedReports",
+		}).Warning("Wrong role claim!")
+		w.WriteHeader(403)
+		w.Write([]byte("Wrong role claim!"))
+		return
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	cur, err := collection.Find(ctx, filter)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"function" : "mongo.Find",
+			"handler" : "getArchievedReports",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
+	}
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	defer cur.Close(ctx)
+	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	err = cur.All(ctx, &reports)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"function" : "mongo.All",
+			"handler" : "getArchievedReports",
+			"error"	:	err,
+		},
+		).Fatal("DB interaction resulted in error, shutting down...")
+	}
+	json.NewEncoder(w).Encode(reports)
+}
+
 func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	var filter bson.D
 	reports := make([]models.Report, 0)
@@ -247,8 +302,8 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 	}
 	report.ReportSender = subClaim
 
-	headerDate := r.Header.Get("Date")
-	report.Date = utils.FormatDate(headerDate)
+	report.Date = time.Now().Format("2006-01-02T15:04:05")
+
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, err := collection.InsertOne(ctx, report)

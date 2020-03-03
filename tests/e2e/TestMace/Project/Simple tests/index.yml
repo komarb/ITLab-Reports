@@ -8,7 +8,8 @@ children:
   - Get reports (sorted by date)
   - Get reports (sorted by name)
   - Get reports sample
-variables: {}
+variables:
+  '': ''
 type: Folder
 authData:
   type: inherit

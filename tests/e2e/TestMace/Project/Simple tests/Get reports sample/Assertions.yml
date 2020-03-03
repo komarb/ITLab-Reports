@@ -16,10 +16,12 @@ assertions:
       an array')
     name: Body must be an array
   - disabled: false
-    type: compare
-    actualValue: '${$response.body[0].date}'
-    operator: equal
-    expectedValue: '2020-01-12T02:49:00'
+    type: script
+    script: >-
+      const requestNode = tm.currentNode.parent;
+
+      assert.equal(requestNode.response.body[0].date,
+      requestNode.parent.dynamicVars.reportDate)
   - disabled: false
     type: compare
     actualValue: '${$response.body[0].reportSender}'
