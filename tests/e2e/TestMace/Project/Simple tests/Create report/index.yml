@@ -9,14 +9,16 @@ assignVariables:
       refNodePath: Project/Simple tests
     path: 'body[id]'
     variable: reportId
+  - assign:
+      type: reference
+      refNodePath: Project/Simple tests
+    path: 'body[''date'']'
+    variable: reportDate
 requestData:
   request:
     method: POST
     url: '${$env.basePath}/api/reports'
-  headers:
-    - isChecked: true
-      name: Date
-      value: 'Wed, 21 Oct 2015 07:28:00'
+  headers: []
   disabledInheritedHeaders: []
   params: []
   body:

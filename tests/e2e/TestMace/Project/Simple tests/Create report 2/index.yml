@@ -7,10 +7,7 @@ requestData:
   request:
     method: POST
     url: '${$env.basePath}/api/reports'
-  headers:
-    - isChecked: true
-      name: Date
-      value: 'Sun, 12 Jan 2020 02:49:00'
+  headers: []
   disabledInheritedHeaders: []
   params: []
   body:
