@@ -46,12 +46,3 @@ func LogHandler(w *StatusWriter, r *http.Request) {
 	}).Info("Request: ")
 }
 
-func AuthError(w http.ResponseWriter, err error, function string) {
-	log.WithFields(log.Fields{
-		"function" : function,
-		"error" : err,
-	}).Warning("Authentication error occurred!")
-
-	w.WriteHeader(401)
-	w.Write([]byte(err.Error()))
-}
