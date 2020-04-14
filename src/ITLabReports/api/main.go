@@ -1,9 +1,9 @@
 package main
 
 import (
-	"ITLabReports/config"
-	"ITLabReports/server"
-	"fmt"
+"ITLabReports/config"
+"ITLabReports/server"
+"fmt"
 )
 
 func main() {

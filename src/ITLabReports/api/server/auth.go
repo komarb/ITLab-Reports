@@ -76,7 +76,6 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 				"requiredAlgorithm" : "HS256",
 				"error" : err,
 			}).Warning("Token is not valid!")
-
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Token is not valid\nError: "))
 			w.Write([]byte(err.Error()))
@@ -114,11 +113,11 @@ func getClaim(r *http.Request, claim string) (string, error) {
 		} else {
 			return "", errors.New("there is no Sub claim in token")
 		}
-	case "role":
-		if _, ok := claims["role"]; ok {
-			return fmt.Sprintf("%v", claims["role"]), nil
+	case "itlab":
+		if _, ok := claims["itlab"]; ok {
+			return fmt.Sprintf("%v", claims["itlab"]), nil
 		} else {
-			return "", errors.New("there is no Role claim in token")
+			return "", errors.New("there is no Itlab claim in token")
 		}
 	default:
 		return "", errors.New("requested claim is invalid")

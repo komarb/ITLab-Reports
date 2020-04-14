@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -20,9 +21,9 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 
 	w.Header().Set("Content-Type", "application/json")
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -31,18 +32,18 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch roleClaim {
-	case "admin":
+	switch {
+	case strings.Contains(itlabClaim, "reports.admin"):
 		filter = bson.M{"archived" : false}
-	case "user":
+	case strings.Contains(itlabClaim, "reports.user"):
 		filter = bson.M{"reportsender": subClaim, "archived" : false}
 	default:
 		log.WithFields(log.Fields{
-			"roleClaim" : roleClaim,
+			"itlabClaim" : itlabClaim,
 			"handler" : "getAllReports",
-		}).Warning("Wrong role claim!")
+		}).Warning("Wrong itlab claim!")
 		w.WriteHeader(403)
-		w.Write([]byte("Wrong role claim!"))
+		w.Write([]byte("Wrong itlab claim!"))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,9 +75,9 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 	reports := make([]models.Report, 0)
 	w.Header().Set("Content-Type", "application/json")
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -84,18 +85,18 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
-	switch roleClaim {
-	case "admin":
+	switch {
+	case strings.Contains(itlabClaim, "reports.admin"):
 		filter = bson.M{"archived" : false}
-	case "user":
+	case strings.Contains(itlabClaim, "reports.user"):
 		filter = bson.M{"reportsender": subClaim, "archived" : false}
 	default:
 		log.WithFields(log.Fields{
-			"roleClaim" : roleClaim,
+			"itlabClaim" : itlabClaim,
 			"handler" : "getAllReportsSorted",
-		}).Warning("Wrong role claim!")
+		}).Warning("Wrong itlab claim!")
 		w.WriteHeader(403)
-		w.Write([]byte("wrong role claim"))
+		w.Write([]byte("wrong itlab claim"))
 		return
 	}
 
@@ -148,9 +149,9 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -166,7 +167,7 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if report.ReportSender == subClaim || roleClaim == "admin" {
+	if report.ReportSender == subClaim || strings.Contains(itlabClaim, "reports.admin") {
 		json.NewEncoder(w).Encode(report)
 	} else {
 		w.WriteHeader(403)
@@ -179,9 +180,9 @@ func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 
 	w.Header().Set("Content-Type", "application/json")
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -190,18 +191,18 @@ func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch roleClaim {
-	case "admin":
+	switch {
+	case strings.Contains(itlabClaim, "reports.admin"):
 		filter = bson.M{"archived" : true}
-	case "user":
+	case strings.Contains(itlabClaim, "reports.user"):
 		filter = bson.M{"reportsender": subClaim, "archived" : true}
 	default:
 		log.WithFields(log.Fields{
-			"roleClaim" : roleClaim,
+			"itlabClaim" : itlabClaim,
 			"handler" : "getArchievedReports",
-		}).Warning("Wrong role claim!")
+		}).Warning("Wrong itlab claim!")
 		w.WriteHeader(403)
-		w.Write([]byte("Wrong role claim!"))
+		w.Write([]byte("Wrong itlab claim!"))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -240,9 +241,9 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
 	findOptions := options.Find().SetSort(bson.M{"date": 1})
 
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -250,7 +251,8 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
-	if employee == subClaim || roleClaim == "admin" {
+
+	if employee == subClaim || strings.Contains(itlabClaim, "reports.admin") {
 		filter = bson.D{
 			{"reportsender" ,employee},
 			{"archived" , false},
@@ -341,9 +343,9 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -352,7 +354,7 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if updatedReport.ReportSender == subClaim || roleClaim == "admin" {
+	if updatedReport.ReportSender == subClaim || strings.Contains(itlabClaim, "reports.admin") {
 		updatedReport.Text = report.Text
 		if report.Text == "" {
 			updatedReport.Archived = true
@@ -388,9 +390,9 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	roleClaim, err := getClaim(r, "role")
+	itlabClaim, err := getClaim(r, "itlab")
 	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
+		logging.AuthError(w, err, "getClaim(itlab)")
 		return
 	}
 	subClaim, err := getClaim(r, "sub")
@@ -398,7 +400,7 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		logging.AuthError(w, err, "getClaim(sub)")
 		return
 	}
-	if report.ReportSender == subClaim || roleClaim == "admin" {
+	if report.ReportSender == subClaim || strings.Contains(itlabClaim, "reports.admin") {
 		report.Archived = true
 		updateResult, err := collection.ReplaceOne(ctx, filter, report)
 		if err != nil || updateResult.MatchedCount == 0 {
