@@ -1,7 +1,6 @@
 package server
 
 import (
-	"ITLabReports/logging"
 	"ITLabReports/models"
 	"ITLabReports/utils"
 	"context"
@@ -20,31 +19,14 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 
 	w.Header().Set("Content-Type", "application/json")
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
+
+	switch {
+	case isAdmin():
+		filter = bson.M{"archived" : false}
+	case isUser():
+		filter = bson.M{"reportsender": Claims.Sub, "archived" : false}
 	}
 
-	switch roleClaim {
-	case "admin":
-		filter = bson.M{"archived" : false}
-	case "user":
-		filter = bson.M{"reportsender": subClaim, "archived" : false}
-	default:
-		log.WithFields(log.Fields{
-			"roleClaim" : roleClaim,
-			"handler" : "getAllReports",
-		}).Warning("Wrong role claim!")
-		w.WriteHeader(403)
-		w.Write([]byte("Wrong role claim!"))
-		return
-	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter)
 	if err != nil {
@@ -73,30 +55,14 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 	reports := make([]models.Report, 0)
+
 	w.Header().Set("Content-Type", "application/json")
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
-	}
-	switch roleClaim {
-	case "admin":
+
+	switch {
+	case isAdmin():
 		filter = bson.M{"archived" : false}
-	case "user":
-		filter = bson.M{"reportsender": subClaim, "archived" : false}
-	default:
-		log.WithFields(log.Fields{
-			"roleClaim" : roleClaim,
-			"handler" : "getAllReportsSorted",
-		}).Warning("Wrong role claim!")
-		w.WriteHeader(403)
-		w.Write([]byte("wrong role claim"))
-		return
+	case isUser():
+		filter = bson.M{"reportsender": Claims.Sub, "archived" : false}
 	}
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -137,36 +103,24 @@ func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
 func getReport(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 	var report models.Report
+
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewDecoder(r.Body).Decode(&report)
 	data := mux.Vars(r)
-
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
-	}
 	filter = bson.M{"_id": objID}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&report)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	if report.ReportSender == subClaim || roleClaim == "admin" {
+	if report.ReportSender == Claims.Sub || isAdmin() {
 		json.NewEncoder(w).Encode(report)
 	} else {
 		w.WriteHeader(403)
@@ -179,30 +133,12 @@ func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 	var filter bson.M
 
 	w.Header().Set("Content-Type", "application/json")
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
-	}
 
-	switch roleClaim {
-	case "admin":
+	switch {
+	case isAdmin():
 		filter = bson.M{"archived" : true}
-	case "user":
-		filter = bson.M{"reportsender": subClaim, "archived" : true}
-	default:
-		log.WithFields(log.Fields{
-			"roleClaim" : roleClaim,
-			"handler" : "getArchievedReports",
-		}).Warning("Wrong role claim!")
-		w.WriteHeader(403)
-		w.Write([]byte("Wrong role claim!"))
-		return
+	case isUser():
+		filter = bson.M{"reportsender": Claims.Sub, "archived" : true}
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter)
@@ -232,6 +168,7 @@ func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	var filter bson.D
 	reports := make([]models.Report, 0)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	data := mux.Vars(r)
@@ -239,18 +176,7 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	dateBegin := utils.FormatQueryDate(data["dateBegin"])+"T00:00:00"
 	dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
 	findOptions := options.Find().SetSort(bson.M{"date": 1})
-
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
-	}
-	if employee == subClaim || roleClaim == "admin" {
+	if employee == Claims.Sub || isAdmin() {
 		filter = bson.D{
 			{"reportsender" ,employee},
 			{"archived" , false},
@@ -263,7 +189,6 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
 		return
 	}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
@@ -276,7 +201,6 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cur.Close(ctx)
-
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	err = cur.All(ctx, &reports)
 	if err != nil {
@@ -292,19 +216,13 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 
 func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
+
+
 	w.Header().Set("Content-Type", "application/json")
+
 	json.NewDecoder(r.Body).Decode(&report)
-
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim (sub)")
-		return
-	}
-	report.ReportSender = subClaim
-
+	report.ReportSender = Claims.Sub
 	report.Date = time.Now().Format("2006-01-02T15:04:05")
-
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, err := collection.InsertOne(ctx, report)
 	if err != nil {
@@ -323,36 +241,24 @@ func createReport(w http.ResponseWriter, r *http.Request) {
 func updateReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 	var updatedReport models.Report
+
 	w.Header().Set("Content-Type", "application/json")
+
 	json.NewDecoder(r.Body).Decode(&report)
-
 	data := mux.Vars(r)
-
 	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 	filter := bson.M{"_id": objID}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&updatedReport)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
-	}
-
-	if updatedReport.ReportSender == subClaim || roleClaim == "admin" {
+	if updatedReport.ReportSender == Claims.Sub || isAdmin() {
 		updatedReport.Text = report.Text
 		if report.Text == "" {
 			updatedReport.Archived = true
@@ -373,6 +279,7 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 
 func deleteReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
+
 	w.Header().Set("Content-Type", "application/json")
 
 	data := mux.Vars(r)
@@ -388,17 +295,7 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	roleClaim, err := getClaim(r, "role")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(role)")
-		return
-	}
-	subClaim, err := getClaim(r, "sub")
-	if err != nil {
-		logging.AuthError(w, err, "getClaim(sub)")
-		return
-	}
-	if report.ReportSender == subClaim || roleClaim == "admin" {
+	if report.ReportSender == Claims.Sub || isAdmin() {
 		report.Archived = true
 		updateResult, err := collection.ReplaceOne(ctx, filter, report)
 		if err != nil || updateResult.MatchedCount == 0 {
