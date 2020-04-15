@@ -3,6 +3,7 @@ package server
 import (
 	"ITLabReports/logging"
 	"ITLabReports/models"
+	"errors"
 	"fmt"
 	"github.com/auth0-community/go-auth0"
 	log "github.com/sirupsen/logrus"
@@ -90,8 +91,12 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 			w.Write([]byte(err.Error()))
 			return
 		}
+		Claims.ITLab = nil
 		getClaims(r)
+
+		fmt.Println(Claims.ITLab)
 		fmt.Println(Claims.Sub)
+
 		sw := logging.NewStatusWriter(w)
 		next.ServeHTTP(sw, r)
 		logging.LogHandler(sw, r)
@@ -113,6 +118,22 @@ func getClaims(r *http.Request) error {
 		return err
 	}
 	err = validator.Claims(r, token, &Claims)
+
+	switch Claims.ITLabInterface.(type) {
+	case string:
+		claimString := Claims.ITLabInterface.(string)
+		Claims.ITLab = []string{claimString}
+	case []interface{}:
+		claimInterface, ok := Claims.ITLabInterface.([]interface{})
+		claimString := make([]string, len(claimInterface))
+		for i, v := range claimInterface {
+			claimString[i], ok = v.(string)
+			if !ok { return errors.New("itLab claim is invalid") }
+		}
+		if ok { Claims.ITLab = claimString }
+	default:
+		return errors.New("itLab claim is invalid")
+	}
 	return nil
 }
 
