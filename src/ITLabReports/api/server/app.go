@@ -1,13 +1,13 @@
 package server
 
 import (
-	"../config"
+	"ITLabReports/config"
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"net/http"
 	"time"
 )
@@ -16,48 +16,89 @@ type App struct {
 	Router *mux.Router
 	DB *mongo.Client
 }
+
 var collection *mongo.Collection
+var cfg *config.Config
 
 func (a *App) Init(config *config.Config) {
-	DBUri := "mongodb://" + config.DB.Host + ":" + config.DB.Port
+	cfg = config
+	fmt.Println(cfg.DB.DBPort)
+	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.DBPort
+	log.WithField("dburi", DBUri).Info("Current database URI: ")
 	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.NewClient",
+			"error"	:	err,
+			"db_uri":	DBUri,
+		},
+		).Fatal("Failed to create new MongoDB client")
 	}
 
 	// Create db connect
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.Connect",
+			"error"	:	err},
+		).Fatal("Failed to connect to MongoDB")
 	}
 
 	// Check the connection
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "mongo.Ping",
+			"error"	:	err},
+		).Fatal("Failed to ping MongoDB")
 	}
-	fmt.Println("Connected to MongoDB!")
-	fmt.Println("DB name: " + config.DB.DBName+", collection: " + config.DB.CollectionName)
+	log.Info("Connected to MongoDB!")
+	log.WithFields(log.Fields{
+		"db_name" : cfg.DB.DBName,
+		"collection_name" : cfg.DB.CollectionName,
+	}).Info("Database information: ")
+	log.WithField("testMode", cfg.App.TestMode).Info("Let's check if test mode is on...")
 
-	collection = client.Database(config.DB.DBName).Collection(config.DB.CollectionName)
+	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
 
 	a.Router = mux.NewRouter()
 	a.setRouters()
 }
+
 func (a *App) setRouters() {
-	a.Router.HandleFunc("/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
-	a.Router.HandleFunc("/reports", getAllReports).Methods("GET")
-	a.Router.HandleFunc("/reports/{id}", getReport).Methods("GET")
-	a.Router.HandleFunc("/reports", createReport).Methods("POST")
-	a.Router.HandleFunc("/reports/{id}", updateReport).Methods("PUT")
-	a.Router.HandleFunc("/reports/{id}", deleteReport).Methods("DELETE")
+	if cfg.App.TestMode {
+		a.Router.Use(testAuthMiddleware)
+	} else {
+		a.Router.Use(authMiddleware)
+	}
+
+	a.Router.HandleFunc("/api/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
+	a.Router.HandleFunc("/api/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/reports", getAllReports).Methods("GET")
+	a.Router.HandleFunc("/api/reports/archived", getArchivedReports).Methods("GET")
+	a.Router.HandleFunc("/api/reports/{id}", getReport).Methods("GET")
+	a.Router.HandleFunc("/api/reports", createReport).Methods("POST")
+	a.Router.HandleFunc("/api/reports/{id}", updateReport).Methods("PUT")
+	a.Router.HandleFunc("/api/reports/{id}", deleteReport).Methods("DELETE")
 }
+
 func (a *App) Run(addr string) {
+	log.WithField("port", cfg.App.AppPort).Info("Starting server on port:")
+	log.Info("\n\nNow handling routes!")
+
 	err := http.ListenAndServe(addr, a.Router)
 	if err != nil {
-		log.Panic(err)
+		log.WithFields(log.Fields{
+			"function" : "http.ListenAndServe",
+			"error"	:	err},
+		).Fatal("Failed to run a server!")
 	}
+}
+
+func init() {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
 }

@@ -1,4 +1,4 @@
-FROM rtuitlab/testmace:0.0.1-8
+FROM rtuitlab/testmace:1.0.0-1
 
 COPY ./Project /project
 COPY ./waitWebApp.sh /waitWebApp.sh

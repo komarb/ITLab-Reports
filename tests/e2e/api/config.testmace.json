@@ -1,6 +1,12 @@
 {
-  "host": "test-db",
-  "port": "27017",
-  "dbname" : "tests_database",
-  "collectionName" : "reports"
+  "DbOptions": {
+    "host": "test-db",
+    "dbPort": "27017",
+    "dbName" : "tests_database",
+    "collectionName" : "reports"
+  },
+  "AppOptions": {
+    "appPort": "8080",
+    "testMode": true
+  }
 }
