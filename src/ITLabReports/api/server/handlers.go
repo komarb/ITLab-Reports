@@ -165,7 +165,7 @@ func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 
-func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
+func getEmployeeReports(w http.ResponseWriter, r *http.Request) {
 	var filter bson.D
 	reports := make([]models.Report, 0)
 
@@ -173,10 +173,14 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 
 	data := mux.Vars(r)
 	employee := data["employee"]
-	dateBegin := utils.FormatQueryDate(data["dateBegin"])+"T00:00:00"
-	dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
-	findOptions := options.Find().SetSort(bson.M{"date": 1})
-	if employee == Claims.Sub || isAdmin() {
+	if employee != Claims.Sub && !isAdmin() {
+		w.WriteHeader(403)
+		return
+	}
+
+	if data["dateBegin"] != "" && data["dateEnd"] != "" {
+		dateBegin := utils.FormatQueryDate(data["dateBegin"])+"T00:00:00"
+		dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
 		filter = bson.D{
 			{"reportsender" ,employee},
 			{"archived" , false},
@@ -186,15 +190,19 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 			}},
 		}
 	} else {
-		w.WriteHeader(403)
-		return
+		filter = bson.D{
+			{"reportsender" ,employee},
+			{"archived" , false},
+		}
 	}
+
+	findOptions := options.Find().SetSort(bson.M{"date": 1})
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.Find",
-			"handler" : "getEmployeeSample",
+			"handler" : "getEmployeeSampleDate",
 			"error"	:	err,
 		},
 		).Fatal("DB interaction resulted in error, shutting down...")
@@ -206,7 +214,7 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.All",
-			"handler" : "getEmployeeSample",
+			"handler" : "getEmployeeSampleDate",
 			"error"	:	err,
 		},
 		).Fatal("DB interaction resulted in error, shutting down...")
@@ -214,9 +222,9 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 
+
 func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
-
 
 	w.Header().Set("Content-Type", "application/json")
 

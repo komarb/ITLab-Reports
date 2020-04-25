@@ -75,7 +75,8 @@ func (a *App) setRouters() {
 	}
 
 	a.Router.HandleFunc("/api/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/api/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/employee/{employee}", getEmployeeReports).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/employee/{employee}", getEmployeeReports).Methods("GET")
 	a.Router.HandleFunc("/api/reports", getAllReports).Methods("GET")
 	a.Router.HandleFunc("/api/reports/archived", getArchivedReports).Methods("GET")
 	a.Router.HandleFunc("/api/reports/{id}", getReport).Methods("GET")
