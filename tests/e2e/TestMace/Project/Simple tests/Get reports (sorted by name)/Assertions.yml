@@ -3,11 +3,14 @@ variables: {}
 type: Assertion
 assertions:
   - disabled: false
+    negative: false
     type: compare
     actualValue: '${$response.code}'
     operator: equal
+    expectedValueType: string
     expectedValue: '200'
   - disabled: false
+    negative: false
     type: script
     script: >
       console.log(tm.currentNode.parent.vars.checkCount)
@@ -16,14 +19,15 @@ assertions:
       an array')
     name: Body must be an array
   - disabled: false
+    negative: false
     type: script
     script: >-
       const requestNode = tm.currentNode.parent;
 
       const returned = requestNode.response.body;
 
-      sorted = returned.map(v => v.reportSender).every((val, i, arr) => !i ||
-      (val >= arr[i - 1]));
+      sorted = returned.map(v => v.assignees.reporter).every((val, i, arr) => !i
+      || (val >= arr[i - 1]));
 
       assert.equal(sorted, true);
     name: Body must be sorted by name
