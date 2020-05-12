@@ -12,9 +12,10 @@ func init() {
 	migrate.Register(func(db *mongo.Database) error {
 		pipeline := []interface{}{
 			bson.M{"$set" : bson.M{
-				"assignees.reporter" : "$reportSender",
-				"assignees.implementer" : "$reportSender",
+				"assignees.reporter" : "$reportsender",
+				"assignees.implementer" : "$reportsender",
 			}},
+			bson.M{"$unset" : "reportsender"},
 			bson.M{"$out" : "reports"},
 		}
 
@@ -27,6 +28,9 @@ func init() {
 		return nil
 	}, func(db *mongo.Database) error {
 		pipeline := []interface{}{
+			bson.M{"$set" : bson.M{
+				"reportsender" : "$assignees.reporter",
+			}},
 			bson.M{"$unset" : "assignees"},
 			bson.M{"$out" : "reports"},
 		}

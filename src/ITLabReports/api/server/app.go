@@ -57,11 +57,7 @@ func (a *App) Init(config *config.Config) {
 		).Fatal("Failed to ping MongoDB")
 	}
 	log.Info("Connected to MongoDB!")
-	log.WithFields(log.Fields{
-		"db_name" : cfg.DB.DBName,
-		"collection_name" : cfg.DB.CollectionName,
-	}).Info("Database information: ")
-	log.WithField("testMode", cfg.App.TestMode).Info("Let's check if test mode is on...")
+
 	db := client.Database(cfg.DB.DBName)
 	migrate.SetDatabase(db)
 	if err := migrate.Up(migrate.AllAvailable); err != nil {
@@ -70,6 +66,15 @@ func (a *App) Init(config *config.Config) {
 			"error"	:	err},
 		).Fatal("Failed to migrate MongoDB!")
 	}
+	ver, desc, err := migrate.Version()
+	log.WithFields(log.Fields{
+		"db_name" : cfg.DB.DBName,
+		"collection_name" : cfg.DB.CollectionName,
+		"version" : ver,
+		"description" : desc,
+	}).Info("Database information: ")
+
+	log.WithField("testMode", cfg.App.TestMode).Info("Let's check if test mode is on...")
 	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
 	a.Router = mux.NewRouter()
 	a.setRouters()
