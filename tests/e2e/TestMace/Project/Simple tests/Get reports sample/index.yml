@@ -7,15 +7,15 @@ requestData:
   request:
     method: GET
     url: >-
-      ${$env.basePath}/api/reports/321-lol-321?dateBegin=01.11.2016&dateEnd=05.01.3021
+      ${$env.basePath}/api/reports/employee/321-lol-321?dateBegin=2016-01-11T22:27:40&dateEnd=3021-05-01T22:27:40
   headers: []
   disabledInheritedHeaders: []
   params:
     - name: dateBegin
-      value: 01.11.2016
+      value: '2016-01-11T22:27:40'
       isChecked: true
     - name: dateEnd
-      value: 05.01.3021
+      value: '3021-05-01T22:27:40'
       isChecked: true
   body:
     type: Json

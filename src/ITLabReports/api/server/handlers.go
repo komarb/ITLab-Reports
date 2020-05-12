@@ -2,7 +2,6 @@ package server
 
 import (
 	"ITLabReports/models"
-	"ITLabReports/utils"
 	"context"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -16,15 +15,21 @@ import (
 
 func getAllReports(w http.ResponseWriter, r *http.Request) {
 	reports := make([]models.Report, 0)
-	var filter bson.M
+	var filter bson.D
 
 	w.Header().Set("Content-Type", "application/json")
 
 	switch {
 	case isAdmin():
-		filter = bson.M{"archived" : false}
+		filter = bson.D{{"archived" , false}}
 	case isUser():
-		filter = bson.M{"reportsender": Claims.Sub, "archived" : false}
+		filter = bson.D{
+			{"archived" , false},
+			{"$or", []interface{}{
+				bson.D{{"assignees.reporter",Claims.Sub}},
+				bson.D{{"assignees.implementer", Claims.Sub}},
+			}},
+		}
 	}
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -53,25 +58,30 @@ func getAllReports(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllReportsSorted(w http.ResponseWriter, r *http.Request) {
-	var filter bson.M
+	var filter bson.D
 	reports := make([]models.Report, 0)
 
 	w.Header().Set("Content-Type", "application/json")
 
 	switch {
 	case isAdmin():
-		filter = bson.M{"archived" : false}
+		filter = bson.D{{"archived" , false}}
 	case isUser():
-		filter = bson.M{"reportsender": Claims.Sub, "archived" : false}
+		filter = bson.D{
+			{"archived" , false},
+			{"$or", []interface{}{
+				bson.D{{"assignees.reporter",Claims.Sub}},
+				bson.D{{"assignees.implementer", Claims.Sub}},
+			}},
+		}
 	}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	data := mux.Vars(r)
 	sortVar := data["var"]
 	findOptions := options.Find()
 	switch sortVar {
 	case "name":
-		findOptions.SetSort(bson.M{"reportsender": 1})
+		findOptions.SetSort(bson.M{"assignees.reporter": 1})
 	case "date":
 		findOptions.SetSort(bson.M{"date": 1})
 	}
@@ -120,7 +130,7 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if report.ReportSender == Claims.Sub || isAdmin() {
+	if report.Assignees.Reporter == Claims.Sub || report.Assignees.Implementer == Claims.Sub || isAdmin() {
 		json.NewEncoder(w).Encode(report)
 	} else {
 		w.WriteHeader(403)
@@ -130,15 +140,21 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 
 func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 	reports := make([]models.Report, 0)
-	var filter bson.M
+	var filter bson.D
 
 	w.Header().Set("Content-Type", "application/json")
 
 	switch {
 	case isAdmin():
-		filter = bson.M{"archived" : true}
+		filter = bson.D{{"archived", true}}
 	case isUser():
-		filter = bson.M{"reportsender": Claims.Sub, "archived" : true}
+		filter = bson.D{
+			{"archived" , true},
+			{"$or", []interface{}{
+				bson.D{{"assignees.reporter",Claims.Sub}},
+				bson.D{{"assignees.implementer", Claims.Sub}},
+			}},
+		}
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter)
@@ -165,7 +181,7 @@ func getArchivedReports(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reports)
 }
 
-func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
+func getEmployeeReports(w http.ResponseWriter, r *http.Request) {
 	var filter bson.D
 	reports := make([]models.Report, 0)
 
@@ -173,12 +189,19 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 
 	data := mux.Vars(r)
 	employee := data["employee"]
-	dateBegin := utils.FormatQueryDate(data["dateBegin"])+"T00:00:00"
-	dateEnd := utils.FormatQueryDate(data["dateEnd"])+"T23:59:59"
-	findOptions := options.Find().SetSort(bson.M{"date": 1})
-	if employee == Claims.Sub || isAdmin() {
+	if employee != Claims.Sub && !isAdmin() {
+		w.WriteHeader(403)
+		return
+	}
+
+	if data["dateBegin"] != "" && data["dateEnd"] != "" {
+		dateBegin := data["dateBegin"]
+		dateEnd := data["dateEnd"]
 		filter = bson.D{
-			{"reportsender" ,employee},
+			{"$or", []interface{}{
+				bson.D{{"assignees.reporter", employee}},
+				bson.D{{"assignees.implementer", employee}},
+			}},
 			{"archived" , false},
 			{"$and", []interface{}{
 				bson.D{{"date",bson.M{"$gte": dateBegin}}},
@@ -186,15 +209,22 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 			}},
 		}
 	} else {
-		w.WriteHeader(403)
-		return
+		filter = bson.D{
+			{"$or", []interface{}{
+				bson.D{{"assignees.reporter", employee}},
+				bson.D{{"assignees.implementer", employee}},
+			}},
+			{"archived" , false},
+		}
 	}
+
+	findOptions := options.Find().SetSort(bson.M{"date": 1})
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.Find",
-			"handler" : "getEmployeeSample",
+			"handler" : "getEmployeeSampleDate",
 			"error"	:	err,
 		},
 		).Fatal("DB interaction resulted in error, shutting down...")
@@ -206,7 +236,7 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.All",
-			"handler" : "getEmployeeSample",
+			"handler" : "getEmployeeSampleDate",
 			"error"	:	err,
 		},
 		).Fatal("DB interaction resulted in error, shutting down...")
@@ -217,11 +247,16 @@ func getEmployeeSample(w http.ResponseWriter, r *http.Request) {
 func createReport(w http.ResponseWriter, r *http.Request) {
 	var report models.Report
 
-
 	w.Header().Set("Content-Type", "application/json")
+	data := mux.Vars(r)
 
 	json.NewDecoder(r.Body).Decode(&report)
-	report.ReportSender = Claims.Sub
+	report.Assignees.Reporter = Claims.Sub
+	if data["implementer"] != "" {
+		report.Assignees.Implementer = data["implementer"]
+	} else {
+		report.Assignees.Implementer = Claims.Sub
+	}
 	report.Date = time.Now().Format("2006-01-02T15:04:05")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, err := collection.InsertOne(ctx, report)
@@ -258,7 +293,10 @@ func updateReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if updatedReport.ReportSender == Claims.Sub || isAdmin() {
+	if updatedReport.Assignees.Reporter == Claims.Sub || isAdmin() {
+		if report.Assignees.Implementer != "" {
+			updatedReport.Assignees.Implementer = report.Assignees.Implementer
+		}
 		updatedReport.Text = report.Text
 		if report.Text == "" {
 			updatedReport.Archived = true
@@ -295,7 +333,7 @@ func deleteReport(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if report.ReportSender == Claims.Sub || isAdmin() {
+	if report.Assignees.Reporter == Claims.Sub || isAdmin() {
 		report.Archived = true
 		updateResult, err := collection.ReplaceOne(ctx, filter, report)
 		if err != nil || updateResult.MatchedCount == 0 {

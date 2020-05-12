@@ -2,10 +2,12 @@ package server
 
 import (
 	"ITLabReports/config"
+	_ "ITLabReports/migrations"
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	migrate "github.com/xakep666/mongo-migrate"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
@@ -55,14 +57,25 @@ func (a *App) Init(config *config.Config) {
 		).Fatal("Failed to ping MongoDB")
 	}
 	log.Info("Connected to MongoDB!")
+
+	db := client.Database(cfg.DB.DBName)
+	migrate.SetDatabase(db)
+	if err := migrate.Up(migrate.AllAvailable); err != nil {
+		log.WithFields(log.Fields{
+			"function" : "migrate.Up",
+			"error"	:	err},
+		).Fatal("Failed to migrate MongoDB!")
+	}
+	ver, desc, err := migrate.Version()
 	log.WithFields(log.Fields{
 		"db_name" : cfg.DB.DBName,
 		"collection_name" : cfg.DB.CollectionName,
+		"version" : ver,
+		"description" : desc,
 	}).Info("Database information: ")
+
 	log.WithField("testMode", cfg.App.TestMode).Info("Let's check if test mode is on...")
-
 	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
-
 	a.Router = mux.NewRouter()
 	a.setRouters()
 }
@@ -75,10 +88,12 @@ func (a *App) setRouters() {
 	}
 
 	a.Router.HandleFunc("/api/reports", getAllReportsSorted).Methods("GET").Queries("sorted_by","{var}")
-	a.Router.HandleFunc("/api/reports/{employee}", getEmployeeSample).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/reports/employee/{employee}", getEmployeeReports).Methods("GET").Queries("dateBegin","{dateBegin}", "dateEnd", "{dateEnd}")
+	a.Router.HandleFunc("/api/reports/employee/{employee}", getEmployeeReports).Methods("GET")
 	a.Router.HandleFunc("/api/reports", getAllReports).Methods("GET")
 	a.Router.HandleFunc("/api/reports/archived", getArchivedReports).Methods("GET")
 	a.Router.HandleFunc("/api/reports/{id}", getReport).Methods("GET")
+	a.Router.HandleFunc("/api/reports", createReport).Methods("POST").Queries("implementer","{implementer}")
 	a.Router.HandleFunc("/api/reports", createReport).Methods("POST")
 	a.Router.HandleFunc("/api/reports/{id}", updateReport).Methods("PUT")
 	a.Router.HandleFunc("/api/reports/{id}", deleteReport).Methods("DELETE")
