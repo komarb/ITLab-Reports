@@ -3,11 +3,14 @@ variables: {}
 type: Assertion
 assertions:
   - disabled: false
+    negative: false
     type: compare
     actualValue: '${$response.code}'
     operator: equal
+    expectedValueType: string
     expectedValue: '200'
   - disabled: false
+    negative: false
     type: script
     script: >
       console.log(tm.currentNode.parent.vars.checkCount)
@@ -16,6 +19,7 @@ assertions:
       an array')
     name: Body must be an array
   - disabled: false
+    negative: false
     type: script
     script: >-
       const requestNode = tm.currentNode.parent;
@@ -23,8 +27,10 @@ assertions:
       assert.equal(requestNode.response.body[0].date,
       requestNode.parent.dynamicVars.reportDate)
   - disabled: false
+    negative: false
     type: compare
-    actualValue: '${$response.body[0].reportSender}'
+    actualValue: '${$response.body[0].assignees.reporter}'
     operator: equal
+    expectedValueType: string
     expectedValue: 321-lol-321
 name: Assertions
