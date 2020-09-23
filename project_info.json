@@ -9,7 +9,7 @@
     "path":"ITLab-Reports",
     "humanName":"Сервис для отправки отчетов по работе",
     "description":"как его похвалить, ну крутой сервис, классный сервис",
-    "stackTags":[
+    "labels":[
       {
         "name" : "MongoDB",
         "type" : "database"
