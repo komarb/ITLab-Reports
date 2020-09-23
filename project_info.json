@@ -9,17 +9,23 @@
     "path":"ITLab-Reports",
     "humanName":"Сервис для отправки отчетов по работе",
     "description":"как его похвалить, ну крутой сервис, классный сервис",
-    "stackTags":{
-      "directions":[
-        "Backend"
-      ],
-      "databases":[
-        "MongoDB"
-      ],
-      "frameworks":[
-        "Gorilla",
-        "Logrus"
-      ]
-    }
+    "stackTags":[
+      {
+        "name" : "MongoDB",
+        "type" : "database"
+      },
+      {
+        "name" : "Backend",
+        "type" : "direction"
+      },
+      {
+        "name" : "Gorilla",
+        "type" : "framework"
+      },
+      {
+        "name" : "Logrus",
+        "type" : "framework"
+      }
+    ]
   }
 }
