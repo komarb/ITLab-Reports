@@ -1,7 +1,10 @@
-FROM golang:1.12
+FROM golang:1.13
 
 WORKDIR /app
 
 COPY . .
 
-CMD ["go","run","main.go"]
+RUN go build main.go
+RUN chmod +x main
+
+CMD [ "./main" ]
