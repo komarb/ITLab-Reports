@@ -4,7 +4,6 @@ import (
 	"ITLabReports/logging"
 	"ITLabReports/models"
 	"errors"
-	"fmt"
 	"github.com/auth0-community/go-auth0"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/square/go-jose.v2"
@@ -93,9 +92,6 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 		}
 		Claims.ITLab = nil
 		getClaims(r)
-
-		fmt.Println(Claims.ITLab)
-		fmt.Println(Claims.Sub)
 
 		sw := logging.NewStatusWriter(w)
 		next.ServeHTTP(sw, r)

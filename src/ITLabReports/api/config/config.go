@@ -16,8 +16,6 @@ type Config struct {
 
 type DBConfig struct {
 	URI    		   string `envconfig:"ITLAB_REPORTS_MONGO_URI",json:"uri"`
-	DBName         string `envconfig:"ITLAB_REPORTS_MONGO_DB_NAME",json:"dbName"`
-	CollectionName string `envconfig:"ITLAB_REPORTS_MONGO_DB_COLLECTION_NAME",json:"collectionName"`
 }
 type AuthConfig struct {
 	KeyURL   string `envconfig:"ITLAB_REPORTS_AUTH_KEY_URL",json:"keyUrl"`

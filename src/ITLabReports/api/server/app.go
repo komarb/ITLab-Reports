@@ -3,6 +3,7 @@ package server
 import (
 	"ITLabReports/config"
 	_ "ITLabReports/migrations"
+	"ITLabReports/utils"
 	"context"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -55,7 +56,9 @@ func (a *App) Init(config *config.Config) {
 	}
 	log.Info("Connected to MongoDB!")
 
-	db := client.Database(cfg.DB.DBName)
+	dbName := utils.GetDbName(cfg.DB.URI)
+	dbCollectionName := "reports"
+	db := client.Database(dbName)
 	migrate.SetDatabase(db)
 	if err := migrate.Up(migrate.AllAvailable); err != nil {
 		log.WithFields(log.Fields{
@@ -65,14 +68,14 @@ func (a *App) Init(config *config.Config) {
 	}
 	ver, desc, err := migrate.Version()
 	log.WithFields(log.Fields{
-		"db_name" : cfg.DB.DBName,
-		"collection_name" : cfg.DB.CollectionName,
+		"db_name" : dbName,
+		"collection_name" : dbCollectionName,
 		"version" : ver,
 		"description" : desc,
 	}).Info("Database information: ")
 
 	log.WithField("testMode", cfg.App.TestMode).Info("Let's check if test mode is on...")
-	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
+	collection = client.Database(dbName).Collection(dbCollectionName)
 	a.Router = mux.NewRouter()
 	a.setRouters()
 }
