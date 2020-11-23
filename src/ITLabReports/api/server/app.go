@@ -4,7 +4,6 @@ import (
 	"ITLabReports/config"
 	_ "ITLabReports/migrations"
 	"context"
-	"fmt"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	migrate "github.com/xakep666/mongo-migrate"
@@ -24,15 +23,13 @@ var cfg *config.Config
 
 func (a *App) Init(config *config.Config) {
 	cfg = config
-	fmt.Println(cfg.DB.DBPort)
-	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.DBPort
-	log.WithField("dburi", DBUri).Info("Current database URI: ")
-	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
+	log.WithField("dburi", cfg.DB.URI).Info("Current database URI: ")
+	client, err := mongo.NewClient(options.Client().ApplyURI(cfg.DB.URI))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.NewClient",
 			"error"	:	err,
-			"db_uri":	DBUri,
+			"db_uri":	cfg.DB.URI,
 		},
 		).Fatal("Failed to create new MongoDB client")
 	}
